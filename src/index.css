@@ -1,26 +1,82 @@
 @import "tailwindcss";
 
-/* Verb Adventure 2.0 look: indigo primary, navy ink, Red Hat type, soft cards. */
+/* Verbi design system (Gaston proposal): Bleu primary, Marine ink, Rouge accent, Fredoka titles, glass cards on a Ciel sky. */
 @theme {
-  --font-display: "Red Hat Display", "Red Hat Text", system-ui, sans-serif;
+  --font-display: "Fredoka", "Red Hat Text", system-ui, sans-serif;
   --font-sans: "Red Hat Text", system-ui, sans-serif;
   --color-sun: #fdbe3c;
-  --color-grape: #5865f2;
+  --color-grape: #2b5ce6;
+  --color-grape-dark: #1e46c4;
+  --color-grape-soft: #e6edfe;
   --color-mint: #0a875c;
+  --color-mint-dark: #06603f;
+  --color-mint-soft: #e3f6ee;
   --color-coral: #d9441f;
   --color-sky: #1e9bea;
-  --color-ink: #24305e;
+  --color-sky-soft: #e3f4fd;
+  --color-ink: #14205e;
+  --color-muted: #4a5486;
+  --color-subtle: #59628f;
+  --color-line: #e3eaf7;
+  --color-line-strong: #e1e4f0;
+  --color-paper: #dcebff;
+  --color-soft: #f1f5fc;
+  --color-rouge: #ef3340;
+  --color-rouge-dark: #d42733;
+  --color-ciel: #dcebff;
 }
 /* Windows has no flag emoji glyphs; Noto ships them. */
-.flag { font-family: "Noto Color Emoji", sans-serif }
+.flag, .emoji { font-family: "Noto Color Emoji", "Apple Color Emoji", "Segoe UI Emoji", sans-serif }
 
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100% }
 body {
+  margin: 0;
   color: var(--color-ink);
+  font-family: var(--font-sans);
   background:
-    radial-gradient(520px 420px at 105% -5%, #fff1d6 0%, rgba(255,241,214,0) 70%),
-    radial-gradient(480px 420px at -10% 35%, #e3e7ff 0%, rgba(227,231,255,0) 70%),
-    #f4f5fa;
+    radial-gradient(900px 500px at 90% -10%, #ffffff 0%, rgba(255,255,255,0) 70%),
+    linear-gradient(160deg, #cfe2ff 0%, #e6f0ff 60%, #fff1e2 100%);
   background-attachment: fixed;
+  /* Long words (Latinoamérica, Conditionnel présent…) wrap instead of running off a phone screen. */
+  overflow-wrap: break-word;
+  hyphens: auto;
+  overflow-x: hidden;
+}
+h1, h2, h3 { text-wrap: balance }
+img, svg { max-width: 100% }
+:focus-visible { outline: 3px solid var(--color-grape); outline-offset: 2px; border-radius: 12px }
+
+@layer components {
+  .card { background: rgba(255,255,255,.8); border: 1.5px solid rgba(255,255,255,.95); border-radius: 26px; box-shadow: 0 16px 40px rgba(20,32,94,.12); backdrop-filter: blur(14px) }
+  .cap { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--color-subtle) }
+  .mut { color: var(--color-muted) }
+  .pill { display: inline-flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border-radius: 999px; background: rgba(255,255,255,.85); border: 1.5px solid #fff; box-shadow: 0 4px 12px rgba(20,32,94,.08); font-weight: 800; font-size: 15px; color: var(--color-ink); white-space: nowrap }
+  .chip { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px; border-radius: 999px; font-weight: 700; font-size: 15px; background: #fff; color: var(--color-ink); border: 1.5px solid var(--color-line); white-space: nowrap; cursor: pointer }
+  .chip[aria-pressed="true"], .chip.on { background: var(--color-ink); color: #fff; border-color: var(--color-ink) }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 54px; padding: 0 24px; border-radius: 999px; border: 0; font-family: var(--font-display); font-weight: 700; font-size: 16px; letter-spacing: .06em; text-transform: uppercase; line-height: 1.1; text-align: center; cursor: pointer; box-shadow: 0 8px 20px rgba(20,32,94,.16), inset 0 -3px 0 rgba(0,0,0,.12); transition: transform .1s }
+  .btn:active { transform: translateY(2px) }
+  .btn:disabled { opacity: .5; cursor: not-allowed }
+  .btn-primary { background: linear-gradient(#3c6cf0, #2350d8); color: #fff; box-shadow: 0 10px 24px rgba(43,92,230,.35), inset 0 -3px 0 rgba(0,0,0,.15) }
+  .btn-primary:hover:not(:disabled) { background: linear-gradient(#2f60e8, #1e46c4) }
+  .btn-ghost { background: linear-gradient(#fff, #eef3fb); color: var(--color-ink); box-shadow: 0 8px 20px rgba(20,32,94,.14), inset 0 -3px 0 #d8e2f2 }
+  .btn-mint { background: var(--color-mint); color: #fff }
+  .btn-coral { background: var(--color-coral); color: #fff }
+  .bar { height: 10px; border-radius: 999px; background: #e3eaf7; overflow: hidden }
+  .bar > i { display: block; height: 100%; border-radius: 999px; background: var(--color-grape); transition: width .3s }
+  .bar > i.bg-grape { background: linear-gradient(90deg, #2b5ce6, #6b8ff5) }
+  .row { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 10px 12px; border-radius: 16px; background: var(--color-soft); color: var(--color-ink); text-align: left; width: 100% }
+  .row:hover { background: #e6edfe }
+  .rb { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex: none }
+  .ib { width: 44px; height: 44px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; border: 0; background: var(--color-grape); color: #fff; box-shadow: 0 8px 20px rgba(36,48,94,.16); cursor: pointer; flex: none }
+  .ib:disabled { opacity: .4 }
+  .ib-soft { background: var(--color-grape-soft); color: var(--color-grape-dark); box-shadow: none }
+  .page-title { font-family: var(--font-display); font-weight: 700; font-size: 28px; line-height: 1.15; margin: 0 }
+  .h2 { font-family: var(--font-display); font-weight: 600; font-size: 20px; line-height: 1.2; margin: 0 }
+  /* Gaston speech bubble: glass, flat corner pointing at him. */
+  .bubble { background: rgba(255,255,255,.85); border: 1.5px solid #fff; border-radius: 22px; box-shadow: 0 12px 28px rgba(20,32,94,.14); backdrop-filter: blur(14px); padding: 12px 16px; font-weight: 600; line-height: 1.35 }
+  /* Paris-in-the-morning scene behind Gaston (welcome, home hero). */
+  .scene { background: linear-gradient(#bfd9ff 0%, #f7e9d6 55%, #cfe7c2 100%) }
+  .gaston-shadow { filter: drop-shadow(0 12px 16px rgba(20,32,94,.2)) }
 }
 
 @keyframes bob { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-8px) } }

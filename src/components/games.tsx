@@ -4,9 +4,10 @@ import { PASS_SCORE, pronunciationScore, wordMatches } from '../lib/games'
 import { hasLetter } from '../lib/phrases'
 import { t } from '../lib/progress'
 import { speak } from '../lib/speech'
-import { BigButton, SpeakButton } from './ui'
+import { Icon } from './icons'
+import { SpeakButton } from './ui'
 
-const TILE = 'rounded-xl bg-white px-3 py-2 font-display text-xl font-bold shadow-[0_4px_14px_rgba(36,48,94,0.08)] transition active:translate-y-0.5'
+const TILE = 'min-h-11 max-w-full rounded-xl border-2 border-line-strong bg-white px-3.5 py-1.5 text-lg font-bold text-ink shadow-[0_4px_14px_rgba(36,48,94,0.08)] transition active:translate-y-0.5'
 
 /**
  * Build a Sentence. Words move by dragging (pointer events: the same code path for mouse, touch and pen —
@@ -70,18 +71,18 @@ export function SentenceBuilder({ tiles, answer, variant, locked, onDone }: {
 
   return (
     <div className="space-y-4">
-      <div data-drop="answer" aria-label="answer"
-        className="flex min-h-20 flex-wrap items-center gap-2 rounded-2xl border-4 border-dashed border-grape/40 bg-grape/5 p-3">
-        {placed.map((i) => tile(i, 'bg-grape/15'))}
+      <div data-drop="answer" aria-label="answer" lang="fr"
+        className="flex min-h-[132px] flex-wrap content-start items-start gap-2.5 rounded-[20px] border-2 border-dashed border-[#C7CCFB] bg-white p-3.5">
+        {placed.map((i) => tile(i, '!border-[#C7CCFB] !bg-grape-soft !text-grape-dark'))}
       </div>
-      <div data-drop="bank" className="flex min-h-16 flex-wrap justify-center gap-2">
+      <div data-drop="bank" lang="fr" className="flex min-h-14 flex-wrap justify-center gap-2.5">
         {bank.map((i) => tile(i))}
       </div>
       {!locked && (
-        <BigButton className="w-full" disabled={bank.length > 0}
+        <button type="button" className="btn btn-primary w-full" disabled={bank.length > 0}
           onClick={() => { const given = placed.map((i) => tiles[i]).join(' '); onDone(given === answer, given) }}>
-          ✅ {t('check')}
-        </BigButton>
+          {bank.length > 0 ? t('gm_wordsLeft', { n: bank.length }) : <><Icon name="check" strokeWidth={3} />{t('check')}</>}
+        </button>
       )}
     </div>
   )
@@ -161,47 +162,52 @@ export function PronounceChallenge({ phrase, variant, locked, allowRecord, allow
   }
 
   return (
-    <div className="space-y-4 text-center">
-      <p className="font-display text-3xl font-bold text-grape">{phrase}</p>
-      <div className="flex justify-center gap-3">
-        <SpeakButton big text={phrase} variant={variant} />
-        <SpeakButton big slow text={phrase} variant={variant} />
+    <div className="flex flex-col gap-4">
+      <div className="card flex flex-col items-center gap-3.5 !rounded-[28px] px-[18px] py-[22px] text-center">
+        <b lang="fr" className="font-display text-[clamp(28px,9vw,44px)] font-bold leading-tight text-grape-dark">{phrase}</b>
+        <div className="flex gap-3.5">
+          <SpeakButton big text={phrase} variant={variant} />
+          <SpeakButton big slow text={phrase} variant={variant} />
+        </div>
       </div>
-      {!locked && (
-        <div className="flex flex-wrap justify-center gap-3">
-          {canRecord && allowRecord && (
-            <button type="button" onClick={record}
-              className={`rounded-full px-5 py-3 font-bold text-white ${recording ? 'animate-pulse bg-coral' : 'bg-grape'}`}>
-              {recording ? `⏹️ ${t('stop')}` : `🎙️ ${t('record')}`}
-            </button>
-          )}
-          {mine && <button type="button" onClick={() => new Audio(mine).play()} className="rounded-full bg-sky px-5 py-3 font-bold text-white">🎙️ {t('playMine')}</button>}
+      {!locked && canRecord && allowRecord && (
+        <div className="flex flex-col items-center gap-3 py-2">
+          <button type="button" onClick={record} aria-label={recording ? t('stop') : t('record')}
+            className={`flex size-[104px] items-center justify-center rounded-full text-white shadow-[0_8px_20px_rgba(36,48,94,0.16),0_0_0_12px_#ECEEFE,0_0_0_24px_#F5F6FF] ${recording ? 'animate-pulse bg-coral' : 'bg-grape'}`}>
+            {recording ? <span className="size-8 rounded-lg bg-white" /> : <Icon name="mic" size={44} />}
+          </button>
+          <span className="mt-3 text-[15px] font-extrabold text-grape-dark">{recording ? t('stop') : t('record')}</span>
+        </div>
+      )}
+      {!locked && (mine || recognizer) && (
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(160px,100%),1fr))] gap-2.5">
+          {mine && <button type="button" onClick={() => new Audio(mine).play()} className="btn btn-ghost"><Icon name="play" />{t('playMine')}</button>}
           {mine && (
             <button type="button" onClick={() => speak(phrase, variant, { onEnd: () => void new Audio(mine).play() })}
-              className="rounded-full bg-sun px-5 py-3 font-bold">🔊↔🎙️ {t('compareVoice')}</button>
+              className="btn btn-ghost"><Icon name="repeat" />{t('compareVoice')}</button>
           )}
           {recognizer && (
             <button type="button" onClick={check} disabled={listening}
-              className={`rounded-full px-5 py-3 font-bold text-white ${listening ? 'animate-pulse bg-coral' : 'bg-mint'}`}>
-              {listening ? `👂 ${t('listening')}` : `✨ ${t('checkVoice')}`}
+              className={`btn text-white ${listening ? 'animate-pulse bg-coral' : 'bg-sky'}`}>
+              <Icon name="ear" />{listening ? t('listening') : t('checkVoice')}
             </button>
           )}
         </div>
       )}
       {heard !== null && (
-        <div>
-          <p className="text-lg">{t('youSaid', { s: heard || '…' })}</p>
+        <div className="card p-4 text-center">
+          <p className="m-0 text-lg">{t('youSaid', { s: heard || '…' })}</p>
           {/* Which words came through: green heard, red missed — tells the child exactly what to repeat. */}
-          <p className="mt-1 flex flex-wrap justify-center gap-1 font-display text-2xl font-bold">
+          <p lang="fr" className="m-0 mt-1 flex flex-wrap justify-center gap-1 font-display text-2xl font-bold">
             {wordMatches(phrase, heard).map((m, i) => (
-              <span key={i} className={`rounded-lg px-1.5 ${m.ok ? 'bg-mint/20 text-mint' : 'bg-coral/15 text-coral underline decoration-wavy'}`}>{m.word}</span>
+              <span key={i} className={`rounded-lg px-1.5 ${m.ok ? 'bg-mint-soft text-mint-dark' : 'bg-[#FDECEC] text-[#A12424] underline decoration-wavy'}`}>{m.word}</span>
             ))}
           </p>
         </div>
       )}
-      {error && <p className="rounded-xl bg-sun/25 p-2 font-bold">{error}</p>}
-      {!locked && <BigButton color="bg-mint shadow-[0_8px_20px_rgba(36,48,94,0.16)]" className="w-full" onClick={() => onDone(true, '', false)}>{t('selfOk')}</BigButton>}
-      {recognizer && !locked && <p className="text-xs text-ink/50">{t('recogNote')}</p>}
+      {error && <p role="alert" className="m-0 rounded-2xl bg-sun/25 p-3 font-bold">{error}</p>}
+      {!locked && <button type="button" className="btn btn-mint w-full" onClick={() => onDone(true, '', false)}><Icon name="check" strokeWidth={3} />{t('selfOk')}</button>}
+      {recognizer && !locked && <p className="mut m-0 text-center text-xs">{t('recogNote')}</p>}
     </div>
   )
 }

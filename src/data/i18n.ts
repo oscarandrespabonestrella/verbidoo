@@ -49,7 +49,8 @@ export const CATEGORIES = [
 export type Category = (typeof CATEGORIES)[number]['id']
 
 const en = {
-  home: 'Home', verbs: 'Verbs', play: 'Play', languages: 'Languages',
+  gm_recommended: 'Recommended', gm_total: 'in total', gm_correct: 'correct', gm_quit: 'Leave the game', gm_inARow: '{n} in a row', gm_wordsLeft: '{n} words left',
+  home: 'Home', verbs: 'Verbs', play: 'Play', yourProgress: 'Your progress', switchShort: 'Switch', hm_hi: 'Hi, {name}!', hm_today: 'Today: «{verb}»', hm_done: 'Done!', hm_of: '{a} of {b}', hm_review: 'Review', hm_reviewThese: 'Review these verbs', hm_learnedOf: '{a} of {b} learned', hm_toDiscover: 'Still to discover', hm_days: '{n} days', hm_tapToStart: 'Tap your character to start.', hm_addPlayer: 'Add player', hm_changeLater: 'You can change this later in Settings.', hm_step: 'Step {a} of {b}', hm_setupHello: 'Hi! First, tell me which language you speak.', languages: 'Languages',
   hello: "Hi! I'm {name}. Let's learn some verbs!",
   streak: 'day streak', xp: 'XP', level: 'Level', learned: 'verbs learned', todayGoal: "Today's goal",
   continue: 'Continue learning', dailyChallenge: 'Daily challenge', dailyChallengeDesc: "Answer 10 questions to earn bonus XP.",
@@ -63,7 +64,7 @@ const en = {
   game_picture_desc: 'Look at the picture, find the verb', game_listen_desc: 'Listen and tap the right picture', game_conjugate_desc: 'Pick the right form',
   whichVerb: 'Which verb is this?', whatDidYouHear: 'What did you hear?', chooseForm: 'Choose the right form', hearAgain: 'Hear again',
   praise: ["Well done!", "Excellent!", "Spot on!", "Great!", "You're improving!"],
-  tryAgain: "Let's try again! The answer is", irregularHint: 'This form is irregular — it breaks the pattern, so it is worth remembering!',
+  tryAgain: "Let's try again! The answer is", almost: 'Almost there!', answerWas: 'The answer was', gastonToday: 'Today we practise', irregularHint: 'This form is irregular — it breaks the pattern, so it is worth remembering!',
   next: 'Next', sessionDone: "Session complete!", earned: 'You earned {n} XP', playAgain: 'Play again', backHome: 'Back home',
   notFound: "Oops! We couldn't find that verb.", noSpeech: 'Your browser cannot speak out loud. Try Chrome, Edge or Safari.',
   noVoice: 'No {v} voice on this device — another voice will be used.', translation: 'Translation', legend: 'Colors',
@@ -84,6 +85,7 @@ const en = {
   rec_unlocked: 'New tense unlocked: {tense}!', rec_review: 'Review {n} verbs', rec_weakTense: 'Practise {tense} ({p}% right)',
   rec_weakSkill: 'Practise: {game} ({p}% right)', rec_new: 'Meet a new verb: {verb}', rec_adventure: "Start a new session",
   whoIsPlaying: "Who's learning?", grownUps: "Settings",
+  pa_title: 'Parent area', pa_exit: 'Exit', pa_settings: 'Settings', pa_account: 'Account & data', pa_summary: 'Summary', pa_optional: 'Optional', pa_today: 'Today', pa_less: 'Less', pa_more: 'More', pa_lowNote: 'In brackets: number of answers. In red: below 60%.',
   parentTitle: "Settings", report: 'Report', last14: 'Last 14 days',
   answersLbl: 'answers', accuracyLbl: 'right', minutesToday: 'minutes today', minutesWeek: 'minutes this week', verbsSeen: 'verbs met',
   tensesOpen: 'tenses unlocked', perGame: 'By game', lastActive: "Last practised", never: 'not yet',
@@ -104,7 +106,7 @@ const en = {
   missionDone: 'Mission complete! +{n} XP', weeklyDone: 'Weekly challenge won! +{n} XP',
   characters: 'Characters', char_level: 'Reach level {n}', char_streak: 'Play {n} days in a row', char_learned: 'Learn {n} verbs',
   char_tenses: 'Unlock {n} tenses', char_weekly: 'Win a weekly challenge', char_missions: 'Complete {n} missions',
-  compareVoice: 'Compare', switchPlayer: "Switch profile",
+  vp_summary: 'Overview', compareVoice: 'Compare', switchPlayer: "Switch profile",
   badge_all30: 'All 30 verbs', badge_streak7: '7-day streak', badge_tenses5: '5 tenses', badge_allGames: 'All 8 games', badge_voice: 'Super speaker', badge_weekly: 'Weekly winner',
   cloudTitle: 'Cloud backup & sync', cloudOff: 'Cloud accounts are not set up for this copy of the app. Everything stays on this device.',
   cloudWhy: "Optional: sign in to back up your progress and use it on several devices.",
@@ -126,7 +128,8 @@ const en = {
 type Strings = typeof en
 
 const es: Strings = {
-  home: 'Inicio', verbs: 'Verbos', play: 'Jugar', languages: 'Idiomas',
+  gm_recommended: 'Recomendado', gm_total: 'en total', gm_correct: 'aciertos', gm_quit: 'Salir del juego', gm_inARow: '{n} seguidas', gm_wordsLeft: 'Faltan {n} palabras',
+  home: 'Inicio', verbs: 'Verbos', play: 'Jugar', yourProgress: 'Tu progreso', switchShort: 'Cambiar', hm_hi: '¡Hola, {name}!', hm_today: 'Hoy toca «{verb}»', hm_done: '¡Hecho!', hm_of: '{a} de {b}', hm_review: 'Repasar', hm_reviewThese: 'Repasar estos verbos', hm_learnedOf: '{a} de {b} aprendidos', hm_toDiscover: 'Por descubrir', hm_days: '{n} días', hm_tapToStart: 'Toca tu personaje para empezar.', hm_addPlayer: 'Añadir jugador', hm_changeLater: 'Puedes cambiarlo luego en Ajustes.', hm_step: 'Paso {a} de {b}', hm_setupHello: '¡Hola! Primero, dime qué idioma hablas.', languages: 'Idiomas',
   hello: '¡Hola! Soy {name}. ¡Vamos a aprender verbos!',
   streak: 'días seguidos', xp: 'XP', level: 'Nivel', learned: 'verbos aprendidos', todayGoal: 'Meta de hoy',
   continue: 'Seguir aprendiendo', dailyChallenge: 'Reto del día', dailyChallengeDesc: "Responde 10 preguntas y gana XP extra.",
@@ -140,7 +143,7 @@ const es: Strings = {
   game_picture_desc: 'Mira el dibujo y encuentra el verbo', game_listen_desc: 'Escucha y toca el dibujo correcto', game_conjugate_desc: 'Elige la forma correcta',
   whichVerb: '¿Qué verbo es?', whatDidYouHear: '¿Qué escuchaste?', chooseForm: 'Elige la forma correcta', hearAgain: 'Escuchar otra vez',
   praise: ["¡Muy bien!", "¡Excelente!", "¡Exacto!", "¡Genial!", "¡Vas mejorando!"],
-  tryAgain: '¡Intentémoslo otra vez! La respuesta es', irregularHint: 'Esta forma es irregular: no sigue el patrón, ¡vale la pena recordarla!',
+  tryAgain: '¡Intentémoslo otra vez! La respuesta es', almost: '¡Casi lo tienes!', answerWas: 'La respuesta era', gastonToday: 'Hoy practicamos', irregularHint: 'Esta forma es irregular: no sigue el patrón, ¡vale la pena recordarla!',
   next: 'Siguiente', sessionDone: "¡Sesión completada!", earned: 'Ganaste {n} XP', playAgain: 'Jugar otra vez', backHome: 'Volver al inicio',
   notFound: '¡Ups! No encontramos ese verbo.', noSpeech: 'Tu navegador no puede hablar. Prueba con Chrome, Edge o Safari.',
   noVoice: 'No hay voz {v} en este dispositivo; se usará otra voz.', translation: 'Traducción', legend: 'Colores',
@@ -161,6 +164,7 @@ const es: Strings = {
   rec_unlocked: '¡Nuevo tiempo desbloqueado: {tense}!', rec_review: 'Repasa {n} verbos', rec_weakTense: 'Practica {tense} ({p}% de aciertos)',
   rec_weakSkill: 'Practica: {game} ({p}% de aciertos)', rec_new: 'Conoce un verbo nuevo: {verb}', rec_adventure: "Empieza una nueva sesión",
   whoIsPlaying: "¿Quién va a practicar?", grownUps: "Ajustes",
+  pa_title: 'Área de padres', pa_exit: 'Salir', pa_settings: 'Ajustes', pa_account: 'Cuenta y datos', pa_summary: 'Resumen', pa_optional: 'Opcional', pa_today: 'Hoy', pa_less: 'Menos', pa_more: 'Más', pa_lowNote: 'Entre paréntesis: número de respuestas. En rojo: por debajo del 60%.',
   parentTitle: "Ajustes", report: 'Informe', last14: 'Últimos 14 días',
   answersLbl: 'respuestas', accuracyLbl: 'aciertos', minutesToday: 'minutos hoy', minutesWeek: 'minutos esta semana', verbsSeen: 'verbos vistos',
   tensesOpen: 'tiempos desbloqueados', perGame: 'Por juego', lastActive: "Última vez", never: 'todavía no',
@@ -181,7 +185,7 @@ const es: Strings = {
   missionDone: '¡Misión cumplida! +{n} XP', weeklyDone: '¡Reto semanal superado! +{n} XP',
   characters: 'Personajes', char_level: 'Llega al nivel {n}', char_streak: 'Juega {n} días seguidos', char_learned: 'Aprende {n} verbos',
   char_tenses: 'Desbloquea {n} tiempos', char_weekly: 'Supera un reto semanal', char_missions: 'Completa {n} misiones',
-  compareVoice: 'Comparar', switchPlayer: "Cambiar de perfil",
+  vp_summary: 'Resumen', compareVoice: 'Comparar', switchPlayer: "Cambiar de perfil",
   badge_all30: 'Los 30 verbos', badge_streak7: '7 días seguidos', badge_tenses5: '5 tiempos', badge_allGames: 'Los 8 juegos', badge_voice: 'Gran orador', badge_weekly: 'Campeón semanal',
   cloudTitle: 'Copia en la nube y sincronización', cloudOff: 'Las cuentas en la nube no están configuradas en esta copia de la app. Todo se queda en este dispositivo.',
   cloudWhy: "Opcional: inicia sesión para guardar tu progreso y usarlo en varios dispositivos.",
@@ -202,7 +206,8 @@ const es: Strings = {
 }
 
 const pt: Strings = {
-  home: 'Início', verbs: 'Verbos', play: 'Jogar', languages: 'Idiomas',
+  gm_recommended: 'Recomendado', gm_total: 'no total', gm_correct: 'certas', gm_quit: 'Sair do jogo', gm_inARow: '{n} seguidas', gm_wordsLeft: 'Faltam {n} palavras',
+  home: 'Início', verbs: 'Verbos', play: 'Jogar', yourProgress: 'O teu progresso', switchShort: 'Mudar', hm_hi: 'Olá, {name}!', hm_today: 'Hoje toca «{verb}»', hm_done: 'Feito!', hm_of: '{a} de {b}', hm_review: 'Rever', hm_reviewThese: 'Rever estes verbos', hm_learnedOf: '{a} de {b} aprendidos', hm_toDiscover: 'Por descobrir', hm_days: '{n} dias', hm_tapToStart: 'Toca na tua personagem para começar.', hm_addPlayer: 'Adicionar jogador', hm_changeLater: 'Podes mudar isto depois nas Definições.', hm_step: 'Passo {a} de {b}', hm_setupHello: 'Olá! Primeiro, diz-me que língua falas.', languages: 'Idiomas',
   hello: 'Olá! Eu sou {name}. Vamos aprender verbos!',
   streak: 'dias seguidos', xp: 'XP', level: 'Nível', learned: 'verbos aprendidos', todayGoal: 'Meta de hoje',
   continue: 'Continuar a aprender', dailyChallenge: 'Desafio do dia', dailyChallengeDesc: "Responde a 10 perguntas e ganha XP extra.",
@@ -216,7 +221,7 @@ const pt: Strings = {
   game_picture_desc: 'Olha para a imagem e encontra o verbo', game_listen_desc: 'Ouve e toca na imagem certa', game_conjugate_desc: 'Escolhe a forma certa',
   whichVerb: 'Que verbo é este?', whatDidYouHear: 'O que ouviste?', chooseForm: 'Escolhe a forma certa', hearAgain: 'Ouvir outra vez',
   praise: ["Muito bem!", "Excelente!", "Exato!", "Ótimo!", "Estás a melhorar!"],
-  tryAgain: 'Vamos tentar outra vez! A resposta é', irregularHint: 'Esta forma é irregular: não segue o padrão, vale a pena lembrar!',
+  tryAgain: 'Vamos tentar outra vez! A resposta é', almost: 'Quase lá!', answerWas: 'A resposta era', gastonToday: 'Hoje praticamos', irregularHint: 'Esta forma é irregular: não segue o padrão, vale a pena lembrar!',
   next: 'Seguinte', sessionDone: "Sessão concluída!", earned: 'Ganhaste {n} XP', playAgain: 'Jogar outra vez', backHome: 'Voltar ao início',
   notFound: 'Ups! Não encontrámos esse verbo.', noSpeech: 'O teu navegador não consegue falar. Experimenta o Chrome, Edge ou Safari.',
   noVoice: 'Não há voz {v} neste dispositivo; será usada outra voz.', translation: 'Tradução', legend: 'Cores',
@@ -237,6 +242,7 @@ const pt: Strings = {
   rec_unlocked: 'Novo tempo desbloqueado: {tense}!', rec_review: 'Revê {n} verbos', rec_weakTense: 'Pratica {tense} ({p}% de acertos)',
   rec_weakSkill: 'Pratica: {game} ({p}% de acertos)', rec_new: 'Conhece um verbo novo: {verb}', rec_adventure: "Começa uma nova sessão",
   whoIsPlaying: "Quem vai praticar?", grownUps: "Definições",
+  pa_title: 'Área dos pais', pa_exit: 'Sair', pa_settings: 'Definições', pa_account: 'Conta e dados', pa_summary: 'Resumo', pa_optional: 'Opcional', pa_today: 'Hoje', pa_less: 'Menos', pa_more: 'Mais', pa_lowNote: 'Entre parênteses: número de respostas. A vermelho: abaixo de 60%.',
   parentTitle: "Definições", report: 'Relatório', last14: 'Últimos 14 dias',
   answersLbl: 'respostas', accuracyLbl: 'acertos', minutesToday: 'minutos hoje', minutesWeek: 'minutos esta semana', verbsSeen: 'verbos vistos',
   tensesOpen: 'tempos desbloqueados', perGame: 'Por jogo', lastActive: "Última vez", never: 'ainda não',
@@ -257,7 +263,7 @@ const pt: Strings = {
   missionDone: 'Missão cumprida! +{n} XP', weeklyDone: 'Desafio semanal vencido! +{n} XP',
   characters: 'Personagens', char_level: 'Chega ao nível {n}', char_streak: 'Joga {n} dias seguidos', char_learned: 'Aprende {n} verbos',
   char_tenses: 'Desbloqueia {n} tempos', char_weekly: 'Vence um desafio semanal', char_missions: 'Completa {n} missões',
-  compareVoice: 'Comparar', switchPlayer: "Trocar de perfil",
+  vp_summary: 'Resumo', compareVoice: 'Comparar', switchPlayer: "Trocar de perfil",
   badge_all30: 'Os 30 verbos', badge_streak7: '7 dias seguidos', badge_tenses5: '5 tempos', badge_allGames: 'Os 8 jogos', badge_voice: 'Grande orador', badge_weekly: 'Campeão semanal',
   cloudTitle: 'Cópia na nuvem e sincronização', cloudOff: 'As contas na nuvem não estão configuradas nesta cópia da app. Tudo fica neste dispositivo.',
   cloudWhy: "Opcional: entra na tua conta para guardar o teu progresso e usá-lo em vários dispositivos.",

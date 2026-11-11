@@ -51,7 +51,15 @@ const read = (k: string) => { try { return localStorage.getItem(k) } catch { ret
 const write = (k: string, v: string | null) => { try { if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v) } catch { /* private mode: memory only */ } }
 
 /** Random ids, so children created on different devices never collide when a family syncs. */
-export const newId = () => crypto.randomUUID()
+// crypto.randomUUID only exists on https/localhost; plain http (a phone on the LAN) needs the getRandomValues fallback.
+export const newId = (): string => {
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID()
+  const b = crypto.getRandomValues(new Uint8Array(16))
+  b[6] = (b[6] & 0x0f) | 0x40 // version 4
+  b[8] = (b[8] & 0x3f) | 0x80 // RFC 4122 variant
+  const h = [...b].map((x) => x.toString(16).padStart(2, '0')).join('')
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`
+}
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 function loadIndex(): Index {
@@ -160,7 +168,7 @@ export function applySynced(children: ChildDoc[]) {
 }
 /** GDPR access / portability: everything this app stores, as one JSON document. */
 export const exportAll = () => JSON.stringify({
-  app: 'Verb Adventure', exportedAt: new Date().toISOString(),
+  app: 'Verbi', exportedAt: new Date().toISOString(),
   profiles: index.list.map((p) => ({ profile: p, data: profileState(p.id) })),
 }, null, 2)
 
