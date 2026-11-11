@@ -1,0 +1,7 @@
+node_modules
+dist
+scripts/.cache
+.env.local
+.venv-audio/
+voices/
+voice-samples/
