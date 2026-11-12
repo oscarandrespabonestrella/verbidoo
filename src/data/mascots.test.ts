@@ -1,10 +1,10 @@
-import { existsSync } from 'node:fs'
 import { expect, test } from 'vitest'
 import { MASCOTS, mascotImage, type Mood } from './mascots'
 import { TARGETS } from './targets'
 
 const MOODS: Mood[] = ['face', 'guide', 'celebrate', 'approve', 'sad', 'thinking', 'studying', 'love']
-const file = (src: string) => new URL(`../../public${src}`, import.meta.url)
+// Vite's glob (typed by vite/client, run by vitest): every image shipped in public/img, keyed '/public/img/x.webp'.
+const IMAGES = new Set(Object.keys(import.meta.glob('/public/img/*.webp')))
 
 test('Gaston keeps exactly the images he had before', () => {
   expect(mascotImage('gaston', 'face')).toBe('/img/gaston_face.webp')
@@ -26,7 +26,7 @@ test('Ollie uses every one of his images', () => {
 })
 
 test('every mood of every mascot resolves to an existing file', () => {
-  for (const m of Object.values(MASCOTS)) for (const mood of MOODS) expect(existsSync(file(mascotImage(m.id, mood))), `${m.id} ${mood}`).toBe(true)
+  for (const m of Object.values(MASCOTS)) for (const mood of MOODS) expect(IMAGES.has(`/public${mascotImage(m.id, mood)}`), `${m.id} ${mood}`).toBe(true)
 })
 
 test('each learning language has its own mascot, and the mascot belongs to it', () => {
