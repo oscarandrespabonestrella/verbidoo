@@ -1,6 +1,6 @@
 import { go } from "../App";
 import { Icon, type IconName } from "../components/icons";
-import { Gaston, Logo, ParisScene } from "../components/gaston";
+import { LanguagePill, Logo, Mascot, Scene, useTarget } from "../components/mascot";
 import {
   Avatar,
   ProgressBar,
@@ -8,7 +8,7 @@ import {
   VoiceWarning,
   XpPill,
 } from "../components/ui";
-import { CATEGORIES } from "../data/i18n";
+import { CATEGORIES, langOf } from "../data/i18n";
 import { VERBS } from "../data/verbs";
 import { conjugate, infinitive } from "../engine/conjugate";
 import { recommendations, trickyVerbs, type Rec } from "../lib/adaptive";
@@ -73,6 +73,7 @@ export function Dashboard() {
   const s = useProgress();
   const idx = useProfiles();
   const target = s.target!;
+  const words = useTarget().words;
   const open = openVerbs(s, CATEGORIES);
   const next = recommend(s, open)[0];
   const L = learner(s);
@@ -108,6 +109,7 @@ export function Dashboard() {
       <header className="flex items-center justify-between gap-3 lg:hidden">
         <Logo size={28} className="min-w-0" />
         <div className="flex shrink-0 gap-1.5">
+          <LanguagePill />
           <StreakPill n={streak} label={t("streak")} />
           <XpPill n={s.xp} label={t("xp")} />
         </div>
@@ -128,6 +130,7 @@ export function Dashboard() {
           <h1 className="page-title !text-[34px]">{t("hm_hi", { name })}</h1>
         </div>
         <div className="flex gap-2">
+          <LanguagePill />
           <StreakPill n={t("hm_days", { n: streak })} label={t("streak")} />
           <XpPill n={`${s.xp} XP`} label={t("xp")} />
         </div>
@@ -136,18 +139,18 @@ export function Dashboard() {
       <VoiceWarning variant={target} />
 
       <div className="grid gap-4 lg:grid-cols-[repeat(auto-fit,minmax(min(340px,100%),1fr))] lg:gap-5">
-        {/* Hero (design V2-Home): Gaston with the flag over Paris, his bubble, then today's goal + Continue on glass. */}
+        {/* Hero (design V2-Home): the mascot with the flag over its country, its bubble, then today's goal + Continue on glass. */}
         <section className="scene relative flex min-h-[380px] min-w-0 flex-col justify-end gap-3 overflow-hidden rounded-[32px] p-4 shadow-[0_20px_48px_rgba(20,32,94,0.16)] lg:col-span-full lg:min-h-[420px] lg:flex-row lg:items-end lg:p-7">
-          <ParisScene />
+          <Scene />
           <div className="relative flex min-h-[210px] flex-1 items-end lg:min-h-0 lg:self-stretch">
-            <Gaston
-              pose="guide"
+            <Mascot
+              mood="guide"
               size={170}
-              alt="Gaston"
+              alt
               className="gaston-shadow -mb-2 lg:!size-[280px]"
             />
             <p className="bubble absolute right-0 top-0 m-0 max-w-[62%] rounded-br-md text-[15px] lg:left-[230px] lg:right-auto lg:top-6 lg:max-w-[260px]">
-              <span lang="fr">Bonjour {name} !</span> {t("gastonToday")}{" "}
+              <span lang={langOf(target)}>{words.helloName.replace("{name}", name)}</span> {t("gastonToday")}{" "}
               <b lang={target} className="whitespace-nowrap text-grape-dark">
                 <span className="emoji mr-1">{next.emoji}</span>
                 {infinitive(next, target)}

@@ -1,9 +1,11 @@
-"""Record every French phrase in public/audio/fr/phrases.json with an open-source Piper voice.
+"""Record every phrase in public/audio/<dir>/phrases.json with an open-source Piper voice.
 
 Only missing clips are recorded, so re-running after a content change is quick. Clips no longer in the list
 are deleted. Usage (see docs/AUDIO.md):
 
-    python scripts/make_audio.py --voice path/to/fr_FR-siwis-medium.onnx
+    python scripts/make_audio.py --voice path/to/fr_FR-siwis-medium.onnx                 # French (public/audio/fr)
+    python scripts/make_audio.py --voice voices/nl_NL-pim-medium.onnx --dir nl-NL       # Dutch, Netherlands
+    python scripts/make_audio.py --voice voices/nl_BE-rdh-medium.onnx --dir nl-BE       # Dutch, Belgium
 """
 import argparse
 import json
@@ -13,7 +15,7 @@ from pathlib import Path
 import lameenc
 from piper import PiperVoice
 
-OUT = Path(__file__).resolve().parent.parent / "public" / "audio" / "fr"
+AUDIO = Path(__file__).resolve().parent.parent / "public" / "audio"
 BITRATE = 40  # kbps, mono: clear speech at about 5 KB per second
 
 
@@ -29,7 +31,9 @@ def mp3(pcm: bytes, rate: int) -> bytes:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--voice", required=True, help="Piper .onnx voice file (its .onnx.json must sit next to it)")
+    ap.add_argument("--dir", default="fr", help="recording folder under public/audio (fr, nl-NL, nl-BE)")
     args = ap.parse_args()
+    OUT = AUDIO / args.dir
 
     phrases = json.loads((OUT / "phrases.json").read_text(encoding="utf-8"))
     wanted = {p["f"] for p in phrases}

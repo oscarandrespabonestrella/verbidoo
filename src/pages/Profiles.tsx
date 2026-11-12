@@ -1,5 +1,5 @@
 import { go } from '../App'
-import { Gaston, Logo, ParisScene } from '../components/gaston'
+import { Logo, Mascot, Scene, useTarget } from '../components/mascot'
 import { Icon } from '../components/icons'
 import { Avatar } from '../components/ui'
 import { switchProfile, t, useProfiles } from '../lib/progress'
@@ -7,19 +7,20 @@ import { nameOf } from './Settings'
 
 const TINTS = ['#FFF1E3', '#E6EDFE', '#E3F6EE', '#E3F4FD', '#FFF4D6', '#FFEDEA']
 
-/** "Bonjour ! Who plays?" (design V2-Welcome) — Gaston waves the flag over Paris; children pick their own avatar. Adding, editing or removing profiles is in settings. */
+/** "Bonjour ! Who plays?" (design V2-Welcome) — the active child's mascot waves its flag; children pick their own avatar. Adding, editing or removing profiles is in settings. */
 export function Profiles() {
   const idx = useProfiles()
+  const c = useTarget()
   return (
     <div className="scene relative min-h-dvh overflow-hidden">
-      <ParisScene className="!h-[62%]" />
+      <Scene className="!h-[62%]" />
       <div className="relative mx-auto flex min-h-dvh max-w-xl flex-col items-center px-5 pb-7 pt-8">
         <Logo size={44} />
-        <Gaston pose="guide" size={220} alt="Gaston" className="gaston-shadow animate-bob mt-6 sm:mt-10" />
+        <Mascot mood="guide" size={220} alt className="gaston-shadow animate-bob mt-6 sm:mt-10" />
 
         <section className="card mt-auto flex w-full flex-col gap-3.5 px-[18px] pb-[18px] pt-[22px]">
           <div className="text-center">
-            <h1 lang="fr" className="m-0 font-display text-[28px] font-bold tracking-wide">BONJOUR !</h1>
+            <h1 lang={c.lang} className="m-0 font-display text-[28px] font-bold tracking-wide">{c.words.hello}</h1>
             <p className="mut m-0 mt-0.5 text-base font-semibold">{t('whoIsPlaying')}</p>
           </div>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">

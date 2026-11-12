@@ -1,7 +1,9 @@
 import { useSyncExternalStore } from 'react'
-import { STRINGS, TARGET_VARIANTS, langOf, uiLangOf, type StringKey, type Variant } from '../data/i18n'
+import { STRINGS, TARGET_VARIANTS, langOf, uiLangOf, type StringKey, type TargetLang, type Variant } from '../data/i18n'
+import { MASCOTS } from '../data/mascots'
+import { TARGETS } from '../data/targets'
 import { VERBS, type Verb } from '../data/verbs'
-import { DAY, START_TENSES, nextUnlock, pushOutcome, review, type Learner, type VerbProgress } from './adaptive'
+import { DAY, nextUnlock, pushOutcome, review, startTenses, type Learner, type VerbProgress } from './adaptive'
 import type { Kind } from './games'
 import {
   CHARACTERS, MISSION_XP, WEEKLY_XP, addActive, dailyMissions, freshDaily, freshWeekly, isDone, weekOf, weeklyChallenge,
@@ -17,7 +19,10 @@ export const DEFAULT_CONTROLS: Controls = { voiceCheck: false, recording: true, 
 
 export interface State {
   native: Variant | null; target: Variant | null
+  /** XP and badges of the current target language. Other languages wait in xpBy / badgesBy (see setLanguages). */
   xp: number; streak: number; bestStreak: number; lastDay: string; todayXp: number
+  xpBy: Record<string, number>; badgesBy: Record<string, string[]>
+  variantBy: Record<string, Variant>          // last variant picked per target language (fr → fr-CA)
   verbs: Record<string, VerbProgress>         // `${lang}:${verbId}`
   stats: Record<string, number[]>             // `${lang}|kind:picture`, `${lang}|tense:imp`
   unlocked: Record<string, string[]>          // lang → tense ids open in games
@@ -35,7 +40,7 @@ export interface State {
 const today = (d = new Date()) => d.toISOString().slice(0, 10)
 const fresh = (): State => ({
   native: null, target: null, xp: 0, streak: 0, bestStreak: 0, lastDay: '', todayXp: 0,
-  verbs: {}, stats: {}, unlocked: {}, newToday: { day: '', ids: [] }, badges: [],
+  verbs: {}, stats: {}, unlocked: {}, newToday: { day: '', ids: [] }, badges: [], xpBy: {}, badgesBy: {}, variantBy: {},
   daily: freshDaily(''), weekly: freshWeekly(''), history: {}, missionsTotal: 0, weeklyWins: 0,
   character: 'owl', controls: DEFAULT_CONTROLS, updatedAt: 0, epoch: 0,
 })
@@ -176,11 +181,25 @@ export const exportAll = () => JSON.stringify({
 }, null, 2)
 
 // ── Derived values ──
-const lang = (s: State) => langOf(s.target!)
+const lang = (s: State) => langOf(s.target!) as TargetLang
+/** Language the top-level xp/badges belong to. Saves from before Dutch existed were French. */
+const xpLang = (s: State) => (s.target ? lang(s) : 'fr')
+/**
+ * Every language's XP and badges, with the current language's live values folded in.
+ * Learning progress is separate per language; streak, missions and the time report stay per child.
+ */
+export function perLanguage(s: State) {
+  const l = xpLang(s)
+  return { xp: { ...s.xpBy, [l]: s.xp }, badges: { ...s.badgesBy, [l]: s.badges } }
+}
+/** XP earned in one target language. */
+export const xpIn = (s: State, l: TargetLang) => perLanguage(s).xp[l] ?? 0
 const vkey = (id: string) => `${lang(state)}:${id}`
 export const verbProgress = (s: State, id: string): VerbProgress | undefined => s.target ? s.verbs[`${lang(s)}:${id}`] : undefined
 export const isLearned = (s: State, id: string) => (verbProgress(s, id)?.box ?? 0) >= 3
 export const learnedCount = (s: State) => VERBS.filter((v) => isLearned(s, v.id)).length
+/** Verbs learned in one target language (the language picker shows each language's own progress). */
+export const learnedIn = (s: State, l: TargetLang) => VERBS.filter((v) => (s.verbs[`${l}:${v.id}`]?.box ?? 0) >= 3).length
 export const levelOf = (xp: number) => Math.floor(xp / 100) + 1
 export const todayXp = (s: State) => (s.lastDay === today() ? s.todayXp : 0)
 /** Streak counts only if the last active day was today or yesterday. */
@@ -196,7 +215,8 @@ export function learner(s: State): Learner {
   return {
     verbs: strip(s.verbs, pre),
     stats: strip(s.stats, spre),
-    unlocked: s.unlocked[l] ?? START_TENSES,
+    unlocked: s.unlocked[l] ?? startTenses(TARGETS[l].tensePath),
+    path: TARGETS[l].tensePath,
     newToday: s.newToday.day === today() ? s.newToday.ids.filter((k) => k.startsWith(pre)).map((k) => k.slice(pre.length)) : [],
     newPerDay: s.controls.newPerDay,
   }
@@ -205,14 +225,26 @@ export const facts = (s: State): Facts => ({
   xp: s.xp, bestStreak: Math.max(s.bestStreak, s.streak), learned: learnedCount(s),
   tenses: s.target ? learner(s).unlocked.length : 0, weeklyWins: s.weeklyWins, missionsTotal: s.missionsTotal,
 })
-export const unlockedCharacters = (s: State) => CHARACTERS.filter((c) => c.unlocked(facts(s)))
-export const character = (s: State) => unlockedCharacters(s).find((c) => c.id === s.character) ?? CHARACTERS[0]
+/** Characters, with the first companion shown as the current language's mascot (Gaston for French, Ollie for Dutch). */
+export const charactersFor = (s: State) => CHARACTERS.map((c) => {
+  const m = c.id === 'owl' && s.target ? MASCOTS[TARGETS[lang(s)].mascot] : null
+  return m ? { ...c, name: m.name, emoji: m.emoji } : c
+})
+export const unlockedCharacters = (s: State) => charactersFor(s).filter((c) => c.unlocked(facts(s)))
+export const character = (s: State) => unlockedCharacters(s).find((c) => c.id === s.character) ?? charactersFor(s)[0]
 export const setCharacter = (id: string) => set({ character: id })
 /** Verbs in categories the child has unlocked with XP. */
 export const openVerbs = (s: State, CATS: readonly { id: string; xp: number }[]) =>
   VERBS.filter((v) => s.xp >= CATS.find((c) => c.id === v.cat)!.xp)
 
-export const setLanguages = (native: Variant, target: Variant) => set({ native, target })
+/** Choose languages. Switching the target language swaps in that language's XP and badges (verbs, stats and tenses are already keyed by language). */
+export function setLanguages(native: Variant, target: Variant) {
+  const next = langOf(target)
+  const variantBy = { ...state.variantBy, [next]: target }
+  if (state.target && lang(state) === next) return set({ native, target, variantBy })
+  const by = perLanguage(state)
+  set({ native, target, variantBy, xpBy: by.xp, badgesBy: by.badges, xp: by.xp[next] ?? 0, badges: by.badges[next] ?? [] })
+}
 
 const introduced = (id: string): State['newToday'] => {
   const ids = state.newToday.day === today() ? state.newToday.ids : []
@@ -264,7 +296,7 @@ export function answer(id: string, correct: boolean, meta: { kind?: Kind; tense?
     daily, weekly, history, missionsTotal: state.missionsTotal + completed.length, weeklyWins: state.weeklyWins + +weeklyWon,
     ...(isNew ? { newToday: introduced(id) } : {}),
   })
-  const unlock = l === 'fr' ? nextUnlock(learner(state)) : null
+  const unlock = nextUnlock(learner(state))
   if (unlock) set({ unlocked: { ...state.unlocked, [l]: [...learner(state).unlocked, unlock] } })
   awardBadges()
   return { gained, unlocked: unlock, missions: completed, weeklyWon }

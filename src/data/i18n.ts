@@ -1,14 +1,16 @@
 /** Languages the learner already speaks (interface + translations). */
 export type UiLang = 'en' | 'es' | 'pt'
-/** All languages, including French, the language being learned. */
-export type Lang = UiLang | 'fr'
-export type Variant = 'en-US' | 'en-GB' | 'es-ES' | 'es-419' | 'pt-BR' | 'pt-PT' | 'fr-FR' | 'fr-CA'
+/** Languages that can be learned (see data/targets.ts). */
+export type TargetLang = 'fr' | 'nl'
+/** All languages: the ones the learner speaks plus the ones they can learn. */
+export type Lang = UiLang | TargetLang
+export type Variant = 'en-US' | 'en-GB' | 'es-ES' | 'es-419' | 'pt-BR' | 'pt-PT' | 'fr-FR' | 'fr-CA' | 'nl-NL' | 'nl-BE'
 export type Usage = 'regional' | 'literary' | 'formal'
 
 export const langOf = (v: Variant) => v.slice(0, 2) as Lang
 export const uiLangOf = (v: Variant) => v.slice(0, 2) as UiLang
 export const NATIVE_VARIANTS: Variant[] = ['en-US', 'en-GB', 'es-ES', 'es-419', 'pt-BR', 'pt-PT']
-export const TARGET_VARIANTS: Variant[] = ['fr-FR', 'fr-CA']
+export const TARGET_VARIANTS: Variant[] = ['fr-FR', 'fr-CA', 'nl-NL', 'nl-BE']
 
 export const VARIANTS: Record<Variant, { name: string; flag: string; voices: string[] }> = {
   'en-US': { name: 'English (US)', flag: '🇺🇸', voices: ['en-US'] },
@@ -19,6 +21,8 @@ export const VARIANTS: Record<Variant, { name: string; flag: string; voices: str
   'pt-PT': { name: 'Português (Portugal)', flag: '🇵🇹', voices: ['pt-PT'] },
   'fr-FR': { name: 'Français (France)', flag: '🇫🇷', voices: ['fr-FR'] },
   'fr-CA': { name: 'Français (Canada)', flag: '🇨🇦', voices: ['fr-CA'] },
+  'nl-NL': { name: 'Nederlands (Nederland)', flag: '🇳🇱', voices: ['nl-NL'] },
+  'nl-BE': { name: 'Nederlands (België)', flag: '🇧🇪', voices: ['nl-BE'] },
 }
 
 export interface PersonDef { label: string; only?: Variant[]; usage?: Partial<Record<Variant, Usage>> }
@@ -35,6 +39,7 @@ export const PERSONS: Record<Lang, PersonDef[]> = {
     { label: 'vós', usage: { 'pt-BR': 'literary', 'pt-PT': 'literary' } }, { label: 'eles/elas/vocês' },
   ],
   fr: [{ label: 'je' }, { label: 'tu' }, { label: 'il/elle/on' }, { label: 'nous' }, { label: 'vous' }, { label: 'ils/elles' }],
+  nl: [{ label: 'ik' }, { label: 'jij/je' }, { label: 'hij/zij/het' }, { label: 'wij/we' }, { label: 'jullie' }, { label: 'zij/ze' }],
 }
 
 export const CATEGORIES = [
@@ -59,7 +64,7 @@ const en = {
   hearAll: 'Hear the whole table', slow: 'Slow', normal: 'Normal', repeat: 'Repeat', syllables: 'Syllables', meaning: 'What does it mean?',
   regular: 'Regular', irregularV: 'Irregular', spelling: 'Spelling change', tapWord: 'Tap any word to hear it',
   now: 'Now', past: 'Past', future: 'Future', maybe: 'Maybe', wish: 'Wishes & feelings', order: 'Orders', noPerson: 'Forms without a person', regional: 'regional', literary: 'literary / rare', formal: 'formal / written',
-  iSpeak: 'I speak…', iLearn: 'I want to learn French…', start: "Let's go!",
+  iSpeak: 'I speak…', iLearn: 'I want to learn…', learnTitle: 'Which language do you want to learn?', switchLanguage: 'Change learning language', learnWith: 'with {name}', lang_fr: 'French', lang_nl: 'Dutch', learnHint: 'Your progress in each language is kept separately.', start: "Let's go!",
   chooseGame: 'Pick a game', game_picture: 'Picture match', game_listen: 'Listen & choose', game_conjugate: 'Conjugation challenge', game_mixed: "Mixed practice",
   game_picture_desc: 'Look at the picture, find the verb', game_listen_desc: 'Listen and tap the right picture', game_conjugate_desc: 'Pick the right form',
   whichVerb: 'Which verb is this?', whatDidYouHear: 'What did you hear?', chooseForm: 'Choose the right form', hearAgain: 'Hear again',
@@ -123,6 +128,7 @@ const en = {
   privacyCloud: "You're signed in: profile names, avatars and progress are also kept in your cloud account so you can use several devices.",
   noVoiceLang: "This device has no {v} voice, so that audio is off for now. You can add one in your device's speech settings (Windows: Settings → Time & language → Speech → Add voices). Chrome and Edge usually include one.",
   creditsVoice: 'French voice: “siwis” for the open-source Piper speech engine, trained on the SIWIS French Speech Synthesis Database (CC BY 4.0).',
+  creditsVoiceNl: 'Dutch voices: “pim” (Netherlands) and “rdh” (Belgium) for the open-source Piper speech engine, public domain (CC0).',
   badge_first: 'First answer', badge_five: '5 verbs learned', badge_ten: '10 verbs learned', badge_streak3: '3-day streak', badge_xp100: '100 XP', badge_perfect: 'Perfect game',
   cat_core: 'Most used', cat_daily: 'Daily life', cat_movement: 'Movement', cat_food: 'Food', cat_school: 'School', cat_communication: 'Talking', cat_family: 'Family & home',
 }
@@ -139,7 +145,7 @@ const es: Strings = {
   hearAll: 'Escuchar toda la tabla', slow: 'Lento', normal: 'Normal', repeat: 'Repetir', syllables: 'Sílabas', meaning: '¿Qué significa?',
   regular: 'Regular', irregularV: 'Irregular', spelling: 'Cambio ortográfico', tapWord: 'Toca una palabra para escucharla',
   now: 'Ahora', past: 'Pasado', future: 'Futuro', maybe: 'Quizás', wish: 'Deseos y sentimientos', order: 'Órdenes', noPerson: 'Formas sin persona', regional: 'regional', literary: 'literario / raro', formal: 'formal / escrito',
-  iSpeak: 'Yo hablo…', iLearn: 'Quiero aprender francés…', start: '¡Vamos!',
+  iSpeak: 'Yo hablo…', iLearn: 'Quiero aprender…', learnTitle: '¿Qué idioma quieres aprender?', switchLanguage: 'Cambiar el idioma que aprendo', learnWith: 'con {name}', lang_fr: 'Francés', lang_nl: 'Neerlandés', learnHint: 'Tu progreso en cada idioma se guarda por separado.', start: '¡Vamos!',
   chooseGame: 'Elige un juego', game_picture: 'Dibujo y verbo', game_listen: 'Escucha y elige', game_conjugate: 'Reto de conjugación', game_mixed: "Práctica mixta",
   game_picture_desc: 'Mira el dibujo y encuentra el verbo', game_listen_desc: 'Escucha y toca el dibujo correcto', game_conjugate_desc: 'Elige la forma correcta',
   whichVerb: '¿Qué verbo es?', whatDidYouHear: '¿Qué escuchaste?', chooseForm: 'Elige la forma correcta', hearAgain: 'Escuchar otra vez',
@@ -203,6 +209,7 @@ const es: Strings = {
   privacyCloud: "Has iniciado sesión: los nombres de perfil, los avatares y el progreso también se guardan en tu cuenta en la nube para usarlos en varios dispositivos.",
   noVoiceLang: 'Este dispositivo no tiene voz en {v}, así que ese audio está desactivado por ahora. Puedes añadir una en los ajustes de voz del dispositivo (Windows: Configuración → Hora e idioma → Voz → Agregar voces). Chrome y Edge suelen incluir una.',
   creditsVoice: 'Voz en francés: «siwis» para el motor de voz de código abierto Piper, entrenada con la SIWIS French Speech Synthesis Database (CC BY 4.0).',
+  creditsVoiceNl: 'Voces en neerlandés: «pim» (Países Bajos) y «rdh» (Bélgica) para el motor de voz de código abierto Piper, de dominio público (CC0).',
   badge_first: 'Primera respuesta', badge_five: '5 verbos aprendidos', badge_ten: '10 verbos aprendidos', badge_streak3: '3 días seguidos', badge_xp100: '100 XP', badge_perfect: 'Juego perfecto',
   cat_core: 'Más usados', cat_daily: 'Día a día', cat_movement: 'Movimiento', cat_food: 'Comida', cat_school: 'Escuela', cat_communication: 'Hablar', cat_family: 'Familia y casa',
 }
@@ -218,7 +225,7 @@ const pt: Strings = {
   hearAll: 'Ouvir a tabela toda', slow: 'Devagar', normal: 'Normal', repeat: 'Repetir', syllables: 'Sílabas', meaning: 'O que significa?',
   regular: 'Regular', irregularV: 'Irregular', spelling: 'Mudança ortográfica', tapWord: 'Toca numa palavra para a ouvir',
   now: 'Agora', past: 'Passado', future: 'Futuro', maybe: 'Talvez', wish: 'Desejos e sentimentos', order: 'Ordens', noPerson: 'Formas sem pessoa', regional: 'regional', literary: 'literário / raro', formal: 'formal / escrito',
-  iSpeak: 'Eu falo…', iLearn: 'Quero aprender francês…', start: 'Vamos!',
+  iSpeak: 'Eu falo…', iLearn: 'Quero aprender…', learnTitle: 'Que língua queres aprender?', switchLanguage: 'Mudar a língua que aprendo', learnWith: 'com {name}', lang_fr: 'Francês', lang_nl: 'Neerlandês', learnHint: 'O teu progresso em cada língua fica guardado à parte.', start: 'Vamos!',
   chooseGame: 'Escolhe um jogo', game_picture: 'Imagem e verbo', game_listen: 'Ouve e escolhe', game_conjugate: 'Desafio de conjugação', game_mixed: "Prática mista",
   game_picture_desc: 'Olha para a imagem e encontra o verbo', game_listen_desc: 'Ouve e toca na imagem certa', game_conjugate_desc: 'Escolhe a forma certa',
   whichVerb: 'Que verbo é este?', whatDidYouHear: 'O que ouviste?', chooseForm: 'Escolhe a forma certa', hearAgain: 'Ouvir outra vez',
@@ -282,6 +289,7 @@ const pt: Strings = {
   privacyCloud: "Tens sessão iniciada: os nomes de perfil, os avatares e o progresso também ficam na tua conta na nuvem para os usares em vários dispositivos.",
   noVoiceLang: 'Este dispositivo não tem voz em {v}, por isso esse áudio está desligado por agora. Podes adicionar uma nas definições de voz do dispositivo (Windows: Definições → Hora e idioma → Voz → Adicionar vozes). O Chrome e o Edge costumam incluir uma.',
   creditsVoice: 'Voz em francês: «siwis» para o motor de voz de código aberto Piper, treinada com a SIWIS French Speech Synthesis Database (CC BY 4.0).',
+  creditsVoiceNl: 'Vozes em neerlandês: «pim» (Países Baixos) e «rdh» (Bélgica) para o motor de voz de código aberto Piper, de domínio público (CC0).',
   badge_first: 'Primeira resposta', badge_five: '5 verbos aprendidos', badge_ten: '10 verbos aprendidos', badge_streak3: '3 dias seguidos', badge_xp100: '100 XP', badge_perfect: 'Jogo perfeito',
   cat_core: 'Mais usados', cat_daily: 'Dia a dia', cat_movement: 'Movimento', cat_food: 'Comida', cat_school: 'Escola', cat_communication: 'Falar', cat_family: 'Família e casa',
 }

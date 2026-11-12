@@ -8,6 +8,7 @@ import { expect, test } from 'vitest'
 import { VERBS } from '../src/data/verbs'
 import { conjugate } from '../src/engine/conjugate'
 import { formText } from '../src/engine/core'
+import { conjugateDutch, dutchNonFinite } from '../src/engine/dutch'
 import { conjugateFrench, frenchNonFinite } from '../src/engine/french'
 
 const CACHE = new URL('./.cache/', import.meta.url)
@@ -132,3 +133,64 @@ for (const [dict, variant, lang] of [['Spanish', 'es-ES', 'es'], ['Portuguese', 
     expect(problems).toEqual([])
   })
 }
+
+// ── Dutch (a learning language: every main-clause form, participles, imperative, archaic subjunctive, auxiliary) ──
+/**
+ * Reviewed exceptions, same rule as AUX_ETRE_SENSE: the Wiktionary template gives no auxiliary (so it defaults to
+ * "hebben"), but the sense taught takes "zijn" in standard Dutch (ANS): de trein is vertrokken.
+ */
+const AUX_ZIJN_SENSE: Record<string, string> = { vertrekken: 'leave (intransitive)' }
+const DUTCH_WORD = /^[a-zàâäçéèêëîïôöùûüÿ' -]+$/i
+const SKIP_NL = ['subordinate-clause', 'Flanders', 'formal', 'colloquial', 'majestic', 'dialectal', 'obsolete', 'alternative']
+function dutchSlots(tags: string[]): string[] {
+  const has = (t: string) => tags.includes(t)
+  if (SKIP_NL.some(has)) return []
+  if (has('participle')) return [has('past') ? 'pp' : 'ppres']
+  if (has('subjunctive')) return has('present') ? (has('plural') ? ['subj:3', 'subj:4', 'subj:5'] : ['subj:0', 'subj:1', 'subj:2']) : []
+  if (has('archaic')) return []
+  if (has('imperative')) return has('singular') ? ['imper:1'] : []
+  const t = has('past') ? 'ovt' : has('present') ? 'ott' : null
+  if (!t) return []
+  if (has('plural')) return [`${t}:3`, `${t}:4`, `${t}:5`]
+  return [`${t}:${tags.includes('first-person') ? 0 : tags.includes('second-person') ? 1 : 2}`]
+}
+
+test('Dutch engine matches Wiktionary for every verb', { timeout: 180_000 }, async () => {
+  const problems: string[] = []
+  let checked = 0
+  for (const v of VERBS) {
+    // "naar buiten gaan" has no entry: check its core verb. A fixed preposition (houden van) is not part of the table.
+    const multi = v.nl.sep?.includes(' ')
+    const l = { ...v.nl, prep: undefined, ...(multi ? { sep: undefined, inf: v.nl.inf.slice(v.nl.sep!.length + 1) } : {}) }
+    const file = new URL(`nl-${encodeURIComponent(l.inf)}.jsonl`, CACHE)
+    if (!existsSync(file)) {
+      const e = encodeURIComponent
+      const res = await fetch(`https://kaikki.org/dictionary/Dutch/meaning/${e(l.inf[0])}/${e(l.inf.slice(0, 2))}/${e(l.inf)}.jsonl`, { headers: { 'User-Agent': 'verb-adventure-conjugation-check' } })
+      if (!res.ok) throw new Error(`kaikki.org ${res.status} for ${l.inf}`)
+      writeFileSync(file, await res.text())
+    }
+    const entry = readFileSync(file, 'utf8').split('\n').filter(Boolean).map((x) => JSON.parse(x)).find((d) => d.pos === 'verb' && d.forms?.length > 10)
+    const want = new Map<string, Set<string>>()
+    for (const { form, tags = [] } of entry.forms as { form: string; tags?: string[] }[]) {
+      if (!DUTCH_WORD.test(form)) continue
+      for (const k of dutchSlots(tags)) want.set(k, (want.get(k) ?? new Set()).add(form))
+    }
+    const args = entry.inflection_templates?.[0]?.args ?? {}
+    want.set('aux', new Set(args.aux ? String(args.aux).split(/[,/ ]+/) : args.trans === 'unacc' ? ['zijn'] : ['hebben']))
+
+    const got = new Map<string, string>()
+    for (const t of conjugateDutch(l)) t.forms.forEach((f, p) => f && got.set(`${t.tense.id}:${p}`, formText(f)))
+    const nf = dutchNonFinite(l)
+    got.set('pp', formText(nf.pp)).set('ppres', formText(nf.ppres)).set('aux', l.aux ?? 'hebben')
+
+    for (const [k, options] of want) {
+      checked++
+      const mine = got.get(k)
+      if (!mine && k.startsWith('imper') && l.noImper) continue // modal verbs: no imperative taught
+      if (k === 'aux' && AUX_ZIJN_SENSE[l.inf] && mine === 'zijn') continue
+      if (!mine || !options.has(mine)) problems.push(`${l.inf} ${k}: engine "${mine}" ≠ Wiktionary "${[...options].join(' / ')}"`)
+    }
+  }
+  console.log(`checked ${checked} Dutch forms against Wiktionary; ${problems.length} mismatches`)
+  expect(problems).toEqual([])
+})

@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { go } from '../App'
 import { PronounceChallenge, SentenceBuilder } from '../components/games'
-import { Gaston } from '../components/gaston'
+import { Mascot, useTarget } from '../components/mascot'
 import { Icon, Star, type IconName } from '../components/icons'
 import { Confetti, FormView, SpeakButton, StreakPill, VoiceWarning, XpPill } from '../components/ui'
 import { CATEGORIES, PERSONS, VARIANTS, langOf, type Variant } from '../data/i18n'
 import { VERBS, type Verb } from '../data/verbs'
 import { conjugate, formText, infinitive, pronounFor, type Form, type Tense } from '../engine/conjugate'
 import { buildSession, levelFor, pickKind, tenseWeight, type Learner } from '../lib/adaptive'
-import { CUE_WORD, makeQ, verbLabel, type Kind, type Q, type TimeCue } from '../lib/games'
+import { makeQ, verbLabel, type Kind, type Q, type TimeCue } from '../lib/games'
 import { answer, awardBadges, learner, liveStreak, openVerbs, praise, t, useProgress, type AnswerResult, type State } from '../lib/progress'
 import { MISSIONS, MISSION_XP, WEEKLY_XP } from '../lib/rewards'
 import { canSpeak, speak } from '../lib/speech'
@@ -106,7 +106,8 @@ const Banner = ({ icon, className, children }: { icon: IconName; className: stri
 
 export function Practice({ game, focus }: { game?: string; focus?: string }) {
   const s = useProgress()
-  const target = s.target!, native = s.native!
+  const target = s.target!, native = s.native!, tl = langOf(target)
+  const { words, cue } = useTarget()
   const valid = GAMES.some((g) => g.id === game)
 
   // Session plan, fixed at start: due reviews → tricky verbs → a few new ones (see adaptive.buildSession).
@@ -119,8 +120,7 @@ export function Practice({ game, focus }: { game?: string; focus?: string }) {
   const nextQ = (verb: Verb, st: State, recent: Kind[]): Q => {
     const L: Learner = learner(st)
     const kind = pickKind(L, verb, kinds, recent)
-    return makeQ(kind, verb, open, levelFor(L, kind), target, native,
-      langOf(target) === 'fr' ? { unlocked: L.unlocked, weight: (id) => tenseWeight(L, id) } : {})
+    return makeQ(kind, verb, open, levelFor(L, kind), target, native, { unlocked: L.unlocked, weight: (id) => tenseWeight(L, id) })
   }
   const [queue, setQueue] = useState(() => buildSession(learner(s), open, ROUNDS, focus))
   const [recent, setRecent] = useState<Kind[]>([])
@@ -147,8 +147,8 @@ export function Practice({ game, focus }: { game?: string; focus?: string }) {
       <div className={`${fullScreen} animate-pop gap-5 pt-2`}>
         <Confetti />
         <div className="mt-4 flex flex-col items-center gap-2.5">
-          <Gaston pose="celebrate" size={230} alt="Gaston" className="gaston-shadow animate-pop" />
-          <h1 lang="fr" className="m-0 text-center font-display text-[36px] font-bold leading-none tracking-wide">BRAVO !</h1>
+          <Mascot mood="celebrate" size={230} alt className="gaston-shadow animate-pop" />
+          <h1 lang={tl} className="m-0 text-center font-display text-[36px] font-bold leading-none tracking-wide">{words.bravo}</h1>
           <p className="m-0 text-center font-display text-[22px] font-semibold">{t('sessionDone')}</p>
           <Stars n={stars} size={44} off="#E1E4F0" />
         </div>
@@ -247,9 +247,9 @@ export function Practice({ game, focus }: { game?: string; focus?: string }) {
         <span className="flex shrink-0 items-center gap-1 text-[15px] font-extrabold" aria-label={`${level} ${t('levelStars')}`}><Star size={20} />{level}</span>
       </div>
 
-      {/* Gaston asks (design V2-Question). */}
+      {/* The mascot asks (design V2-Question). */}
       <div className="flex min-w-0 items-end gap-1.5">
-        <Gaston pose="face" size={84} />
+        <Mascot mood="thinking" size={84} />
         <div className="bubble mb-3 flex min-w-0 flex-col items-start gap-1 rounded-bl-md">
           <span className="inline-flex h-6 items-center rounded-full px-2.5 text-xs font-extrabold" style={{ background: meta.tagBg, color: meta.tagFg }}>{t(`game_${q.kind}`)}</span>
           <h1 className="m-0 font-display text-[22px] font-bold leading-tight sm:text-2xl">{heading[q.kind]}</h1>
@@ -271,7 +271,7 @@ export function Practice({ game, focus }: { game?: string; focus?: string }) {
         <div className="card flex flex-col items-center gap-2 !rounded-[28px] p-4 text-center">
           <span className="emoji text-5xl leading-none" aria-hidden>{q.verb.emoji}</span>
           {tenseCap}
-          <p lang="fr" className="m-0 text-2xl font-bold leading-snug">
+          <p lang={tl} className="m-0 text-2xl font-bold leading-snug">
             {q.kind === 'conjugate'
               ? <>{subject(target, q.person!, '-', q.tense)} {blank(given !== null ? q.answer : '')}</>
               : <>{subject(target, q.person!, q.form!.aux || q.stem!, q.tense)} {q.form!.aux && `${q.form!.aux} `}<span className="text-grape-dark">{q.stem}</span>{blank(given !== null ? q.answer : '')}</>}
@@ -295,15 +295,15 @@ export function Practice({ game, focus }: { game?: string; focus?: string }) {
           </div>
           <div className="flex min-w-0 items-center gap-3 rounded-2xl bg-soft px-3.5 py-3">
             <div className="min-w-0 flex-1">
-              <span className="cap !text-muted">{t(CUE_NATIVE[q.from!.cue])} · {CUE_WORD[q.from!.cue].toLowerCase()}</span>
-              <p lang="fr" className="m-0 mt-0.5 text-[22px] font-bold leading-snug">{q.from!.text}</p>
+              <span className="cap !text-muted">{t(CUE_NATIVE[q.from!.cue])} · {cue[q.from!.cue].toLowerCase()}</span>
+              <p lang={tl} className="m-0 mt-0.5 text-[22px] font-bold leading-snug">{q.from!.text}</p>
             </div>
             <SpeakButton text={q.from!.text} variant={target} />
           </div>
           <div className="flex justify-center text-[#0B7285]" aria-hidden><Icon name="arrowDown" /></div>
           <div className="rounded-2xl border-2 border-dashed border-[#0B7285] bg-[#E0F4F7] px-3.5 py-3">
-            <span className="cap !text-[#08515F]">{t(CUE_NATIVE[q.to!])} · {CUE_WORD[q.to!].toLowerCase()}</span>
-            <p lang="fr" className="m-0 mt-0.5 text-[22px] font-bold leading-snug">{subject(target, q.person!, '-', q.tense)} {blank(given !== null ? q.answer : '')}</p>
+            <span className="cap !text-[#08515F]">{t(CUE_NATIVE[q.to!])} · {cue[q.to!].toLowerCase()}</span>
+            <p lang={tl} className="m-0 mt-0.5 text-[22px] font-bold leading-snug">{subject(target, q.person!, '-', q.tense)} {blank(given !== null ? q.answer : '')}</p>
           </div>
         </div>
       )}
@@ -333,7 +333,7 @@ export function Practice({ game, focus }: { game?: string; focus?: string }) {
       )}
 
       {choiceKinds.includes(q.kind) && (
-        <div lang={q.kind === 'translate' && q.reverse ? undefined : 'fr'} className={`grid gap-2.5 ${optGrid}`}>
+        <div lang={q.kind === 'translate' && q.reverse ? undefined : tl} className={`grid gap-2.5 ${optGrid}`}>
           {q.options.map((opt) => (
             <button key={opt} type="button" onClick={() => grade(opt === q.answer, opt)} disabled={given !== null}
               className={`${OPT} ${optState(given, opt, q.answer)}`}>
@@ -358,16 +358,16 @@ export function Practice({ game, focus }: { game?: string; focus?: string }) {
             <Banner icon="unlock" className="bg-grape text-white">{t('unlockedNow')} {conjugate(VERBS[0], target).find((x) => x.tense.id === newTense)?.tense.label}</Banner>
           )}
           {ok ? (<>
-            {/* Gaston celebrates (design V2-Correct): French headline, praise in the child's language. */}
+            {/* The mascot approves (design V2-Correct): headline in the learning language, praise in the child's. */}
             <div className="flex min-w-0 items-center gap-2">
-              <Gaston pose="celebrate" size={112} alt="Gaston" className="-my-2 animate-pop" />
+              <Mascot mood="approve" size={112} alt className="-my-2 animate-pop" />
               <div className="min-w-0 flex-1">
-                <b lang="fr" className="block font-display text-[30px] font-bold leading-none tracking-wide">EXCELLENT !</b>
+                <b lang={tl} className="block font-display text-[30px] font-bold leading-none tracking-wide">{words.excellent}</b>
                 <span className="font-display text-xl font-semibold">{praise()}</span>
               </div>
             </div>
             <div className="flex min-w-0 items-center justify-center gap-2.5 text-base font-semibold">
-              <b lang="fr">{infinitive(q.verb, target)}</b><span aria-hidden>=</span><span>{infinitive(q.verb, native)}</span>
+              <b lang={tl}>{infinitive(q.verb, target)}</b><span aria-hidden>=</span><span>{infinitive(q.verb, native)}</span>
               <SpeakButton text={q.spoken} variant={target} className="!size-10" />
             </div>
             <span className="self-center rounded-full bg-white px-3 py-1.5 text-sm font-bold text-[#7A5200]">
@@ -375,18 +375,18 @@ export function Practice({ game, focus }: { game?: string; focus?: string }) {
             </span>
             <button type="button" className="btn btn-primary w-full" onClick={next}>{t('next')}<Icon name="arrowRight" /></button>
           </>) : (<>
-            {/* Gaston under the rain (design V2-Wrong): encouragement, then the right answer. */}
+            {/* The mascot is sad (design V2-Wrong): encouragement, then the right answer. */}
             <div className="flex min-w-0 items-center gap-2">
-              <Gaston pose="sad" size={112} alt="Gaston" className="-my-2" />
+              <Mascot mood="sad" size={112} alt className="-my-2" />
               <div className="min-w-0 flex-1">
-                <b lang="fr" className="block font-display text-[30px] font-bold leading-none tracking-wide">DOMMAGE…</b>
+                <b lang={tl} className="block font-display text-[30px] font-bold leading-none tracking-wide">{words.pity}</b>
                 <span className="font-display text-xl font-semibold">{t('almost')}</span>
               </div>
             </div>
             <div className="flex min-w-0 items-center gap-3 rounded-[18px] bg-white py-3 pl-4 pr-3">
               <div className="min-w-0 flex-1">
                 <span className="cap !text-muted">{q.kind === 'build' ? t('correctOrder') : t('answerWas')}</span>
-                <p lang="fr" className="m-0 text-[19px] font-bold leading-snug">
+                <p lang={tl} className="m-0 text-[19px] font-bold leading-snug">
                   {q.form ? <Said target={target} q={q} form={q.form} /> : q.kind === 'build' ? q.answer : <><span className="emoji">{q.verb.emoji}</span> {infinitive(q.verb, target)}</>}
                 </p>
                 <span className="mut text-sm font-semibold">= {infinitive(q.verb, native)}</span>
