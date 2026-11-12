@@ -137,7 +137,7 @@ export function Dashboard() {
 
       <div className="grid gap-4 lg:grid-cols-[repeat(auto-fit,minmax(min(340px,100%),1fr))] lg:gap-5">
         {/* Hero (design V2-Home): Gaston with the flag over Paris, his bubble, then today's goal + Continue on glass. */}
-        <section className="scene relative flex min-h-[380px] min-w-0 flex-col justify-end gap-3 overflow-hidden rounded-[32px] p-4 shadow-[0_20px_48px_rgba(20,32,94,0.16)] lg:min-h-[420px] lg:flex-row lg:items-end lg:p-7">
+        <section className="scene relative flex min-h-[380px] min-w-0 flex-col justify-end gap-3 overflow-hidden rounded-[32px] p-4 shadow-[0_20px_48px_rgba(20,32,94,0.16)] lg:col-span-full lg:min-h-[420px] lg:flex-row lg:items-end lg:p-7">
           <ParisScene />
           <div className="relative flex min-h-[210px] flex-1 items-end lg:min-h-0 lg:self-stretch">
             <Gaston
@@ -176,7 +176,7 @@ export function Dashboard() {
           </div>
         </section>
 
-        <div className="flex min-w-0 flex-col gap-4 lg:gap-3">
+        <div className="flex min-w-0 flex-col gap-4 lg:col-span-full lg:grid lg:grid-cols-2 lg:gap-5">
           {/* Stats. */}
           <section
             aria-label={t("progress")}

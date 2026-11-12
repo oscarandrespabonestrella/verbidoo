@@ -364,7 +364,7 @@ export function Practice({ game, focus }: { game?: string; focus?: string }) {
 
       {/* Feedback sheet, anchored to the bottom like the design's G02 / G05. */}
       {given !== null && (
-        <section role="status" className={`animate-pop sticky bottom-0 -mx-4 -mb-8 mt-auto flex flex-col gap-3 rounded-t-[28px] border-[3px] px-4 pb-7 pt-4 shadow-[0_-8px_32px_rgba(20,32,94,0.14)] sm:mx-0 sm:mb-0 sm:rounded-b-[28px] ${ok ? 'border-[#F4CF6A] bg-gradient-to-b from-[#FFFDF4] to-[#FFF1C9]' : 'border-white bg-gradient-to-b from-[#F4F6FA] to-[#E2E7F0]'}`}>
+        <section role="status" className={`animate-rise sticky bottom-0 z-30 -mx-4 -mb-8 mt-auto flex flex-col gap-3 rounded-t-[28px] border-[3px] px-4 pb-[max(28px,env(safe-area-inset-bottom))] pt-4 shadow-[0_-8px_32px_rgba(20,32,94,0.14)] sm:mx-0 sm:mb-0 sm:rounded-b-[28px] ${ok ? 'border-[#F4CF6A] bg-gradient-to-b from-[#FFFDF4] to-[#FFF1C9]' : 'border-white bg-gradient-to-b from-[#F4F6FA] to-[#E2E7F0]'}`}>
           {(ok || newTense || rewards.missions.length > 0) && <Confetti />}
           {rewards.missions.map((id) => {
             const m = MISSIONS.find((x) => x.id === id)!
