@@ -6,16 +6,21 @@ const MOODS: Mood[] = ['face', 'guide', 'celebrate', 'approve', 'sad', 'thinking
 // Vite's glob (typed by vite/client, run by vitest): every image shipped in public/img, keyed '/public/img/x.webp'.
 const IMAGES = new Set(Object.keys(import.meta.glob('/public/img/*.webp')))
 
-test('Gaston keeps exactly the images he had before', () => {
-  expect(mascotImage('gaston', 'face')).toBe('/img/gaston_face.webp')
-  expect(mascotImage('gaston', 'guide')).toBe('/img/gaston_field.webp')
-  expect(mascotImage('gaston', 'celebrate')).toBe('/img/gaston_conmemorating.webp')
-  expect(mascotImage('gaston', 'sad')).toBe('/img/gaston_sad.webp')
-  // New moods fall back to the pose Gaston already used in that place.
-  expect(mascotImage('gaston', 'approve')).toBe('/img/gaston_conmemorating.webp') // right answer: celebrate
-  expect(mascotImage('gaston', 'thinking')).toBe('/img/gaston_face.webp')        // question: face
-  expect(mascotImage('gaston', 'studying')).toBe('/img/gaston_face.webp')
-  expect(mascotImage('gaston', 'love')).toBe('/img/gaston_field.webp')
+test('Gaston uses an image of his own for every mood', () => {
+  expect(MOODS.map((m) => mascotImage('gaston', m))).toEqual([
+    '/img/gaston_face.webp', '/img/gaston_field.webp', '/img/gaston_conmemorating.webp', '/img/gaston_approves.webp',
+    '/img/gaston_sad.webp', '/img/gaston_doubt.webp', '/img/gaston_studying.webp', '/img/gaston_love.webp',
+  ])
+})
+
+test('a mood without an image falls back along FALLBACK', () => {
+  const saved = MASCOTS.gaston.images
+  MASCOTS.gaston.images = { face: saved.face, guide: saved.guide, celebrate: saved.celebrate, sad: saved.sad }
+  try {
+    expect(mascotImage('gaston', 'approve')).toBe('/img/gaston_conmemorating.webp')
+    expect(mascotImage('gaston', 'thinking')).toBe('/img/gaston_face.webp')
+    expect(mascotImage('gaston', 'love')).toBe('/img/gaston_field.webp')
+  } finally { MASCOTS.gaston.images = saved }
 })
 
 test('Ollie uses every one of his images', () => {

@@ -20,7 +20,10 @@ const img = (f: string) => `/img/${f}.webp`
 export const MASCOTS: Record<MascotId, MascotConfig> = {
   gaston: {
     id: 'gaston', name: 'Gaston', emoji: '🦕', lang: 'fr', default: img('gaston_face'),
-    images: { face: img('gaston_face'), guide: img('gaston_field'), celebrate: img('gaston_conmemorating'), sad: img('gaston_sad') },
+    images: {
+      face: img('gaston_face'), guide: img('gaston_field'), celebrate: img('gaston_conmemorating'), approve: img('gaston_approves'),
+      sad: img('gaston_sad'), thinking: img('gaston_doubt'), studying: img('gaston_studying'), love: img('gaston_love'),
+    },
   },
   ollie: {
     // ponytail: no face-only Ollie yet, so `face` uses the flag pose; add images.face when the asset exists.
@@ -32,7 +35,7 @@ export const MASCOTS: Record<MascotId, MascotConfig> = {
   },
 }
 
-/** Where a missing mood looks next (e.g. Gaston has no "approve" image, so a right answer shows him celebrating). */
+/** Where a missing mood looks next (e.g. a mascot with no "approve" image shows celebrating on a right answer). */
 export const FALLBACK: Partial<Record<Mood, Mood>> = {
   approve: 'celebrate', thinking: 'face', studying: 'face', love: 'guide', guide: 'face', celebrate: 'face', sad: 'face',
 }
