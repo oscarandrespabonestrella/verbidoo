@@ -2,7 +2,7 @@
 
 Run: `npm install`, `npm run dev` (http://localhost:5173), `npm test` (engine checks), `npm run check:fr` (every French form, plus Spanish/Portuguese simple tenses, vs Wiktionary), `npm run build`.
 
-**Not yet validated by native speakers:** every irregular form in `src/data/french.ts` and `src/data/verbs.ts` and every example sentence. The engine tests are checked against reference tables, but have a native reviewer for each variant look at the content before real children use it.
+**Not yet validated by native speakers:** every irregular form in `src/data/french.ts` and `src/data/verbs.ts`, every example sentence, and the spoken stems (`stems`: written stem + IPA, family 1/2/3/special) in `src/data/french.ts`. The engine tests are checked against reference tables, but have a native reviewer for each variant look at the content before real children use it.
 
 ## 0. Product scope
 
@@ -78,6 +78,7 @@ Rule: a form ships only if engine output == Wiktionary extract == reviewer sign-
 | 1 MVP | Language + native language + variant selection, dashboard, library, verb pages, audio (normal/slow/repeat/syllables/highlight), core tense tables with irregular highlighting, cross-language compare, 3 games, progress, streak, XP, badges, spaced repetition | **Built** |
 | 2 Conjugation engine | French: 18 tenses in 6 groups (subjonctif ×4, impératif +/−, passé simple and passé antérieur tagged literary), infinitive/participles/gérondif, pronominal verbs (se laver), être agreement, elision (j', qu', t', n', d'). Wiktionary cross-check: 1440 forms, 0 mismatches | **Built** |
 | 2c 60 verbs | The 30 next most frequent French verbs (être, dire, pouvoir, savoir, venir, devoir…) in `src/data/verbs-more.ts` + `french.ts`, new "Most used" category. Wiktionary check now covers 2,880 French + 1,920 Spanish + 1,920 Portuguese forms, 0 mismatches (3 reviewed auxiliary exceptions documented in the test) | **Built** |
+| 2d Spoken stems | French verbs grouped by how many stems you **hear** in the present (Dubois' *bases*): 1 (parler), 2 (dor-/dorm-, appell-/appel-), 3 (peu-/pouv-/peuv-), special (être, avoir, aller, faire). Every tense table colours the stem (same colour = same stem across tenses) and fades silent letters (`silentTail`); verb page has a stems card with IPA; Library filters by family. Engine: `frenchStems` / `stemFamily` in `src/engine/french.ts` | **Built** |
 | 2b Remaining | Passive voice, modal constructions (pouvoir/devoir + inf.), impératif passé, IPA (Wiktionary data already has it), Postgres content | Next |
 | 3 Games | All 8 games + mixed: Build a Sentence (pointer-event drag & tap), Complete the Verb, Time Travel (no second correct answer among options), Translation Challenge (both directions), Pronunciation Challenge (listen → record & play back on-device → optional browser speech check). Generators in `src/lib/games.ts`, invariants tested for every verb × level | **Built** |
 | 4 Adaptive | `src/lib/adaptive.ts` (pure, tested): Leitner spaced repetition per verb; rolling accuracy per game and per tense; persistent per-game difficulty; 14-step tense path unlocked by mastery (≥ 6 tries, ≥ 75 %); sessions = due → error-prone → ≤ 3 new verbs (≤ 5 new/day); recognition games first for new verbs; weak games/tenses weighted up; dashboard recommendations, tricky verbs, tense map | **Built** |

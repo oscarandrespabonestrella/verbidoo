@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
 import { go } from '../App'
 import { CAT_STYLE, Icon } from '../components/icons'
-import { BigButton, Card, FormView, Legend, SpeakButton, VoiceWarning } from '../components/ui'
+import { BigButton, Card, FormView, Legend, SpeakButton, VoiceWarning, familyLabel, stemColor } from '../components/ui'
 import { PERSONS, VARIANTS, langOf, uiLangOf, type Lang, type Variant } from '../data/i18n'
 import { verbById, type Verb } from '../data/verbs'
-import { frenchNonFinite } from '../engine/french'
+import { COMPOUND, frenchNonFinite, frenchStems, stemFamily } from '../engine/french'
 import { COMPARABLE, conjugate, formText, infinitive, noteFor, pronounFor, say, sentenceFor, syllables, verbKind, type Time } from '../engine/conjugate'
 import { TENSE_PATH } from '../lib/adaptive'
 import { hasLetter, plain, sentenceTokens, tappedWord } from '../lib/phrases'
@@ -14,6 +14,7 @@ import { SLOW, repeatLast, speak, speakSyllables } from '../lib/speech'
 const TIMES: Time[] = ['now', 'past', 'future', 'maybe', 'order', 'wish']
 const NON_FINITE = { inf: 'Infinitif', infPast: 'Infinitif passé', ppres: 'Participe présent', pp: 'Participe passé', gerund: 'Gérondif' }
 const KIND_BADGE = { regular: 'bg-[#E3F6EE] text-[#06603F]', spelling: 'bg-[#E3F4FD] text-[#13579F]', irregular: 'bg-[#FDECEC] text-[#A12424]' }
+const FAMILY_BADGE = { 1: KIND_BADGE.regular, 2: KIND_BADGE.spelling, 3: KIND_BADGE.irregular, special: KIND_BADGE.irregular }
 type Tab = 'summary' | 'conj' | 'compare'
 /** On phones only the picked section shows; from lg up every section shows side by side. */
 const show = (on: boolean) => (on ? '' : 'hidden lg:block')
@@ -44,6 +45,46 @@ function Sentence({ text, variant, translation }: { text: string; variant: Varia
         <button type="button" onClick={() => read(0.55)} aria-label={t('slow')} title={t('slow')} className="ib ib-soft"><Icon name="turtle" size={20} /></button>
       </div>
     </li>
+  )
+}
+
+/** French only: each spoken stem, its sound, and where it is used. Tapping plays the forms that share it. */
+function StemsCard({ verb, target }: { verb: Verb; target: Variant }) {
+  const tables = useMemo(() => conjugate(verb, target), [verb, target])
+  const st = frenchStems(verb.fr), fam = stemFamily(verb.fr)
+  const pres = tables[0]
+  const rows = st.list.map((s, i) => {
+    const persons = pres.forms.flatMap((f, p) => (f?.stem === i ? [p] : []))
+    const uses = tables.filter((tb) => tb !== pres && !COMPOUND.includes(tb.tense.id) && tb.forms.some((f) => f?.stem === i))
+    const labels = [...uses.map((tb) => tb.tense.label), ...(st.pp === i ? [`Participe passé (${tables.find((tb) => tb.tense.id === 'pc')!.tense.label}…)`] : [])]
+    const src = persons.length ? pres : uses[0] ?? tables.find((tb) => tb.tense.id === 'pc')!
+    const sample = (persons.length ? persons : [0, 1, 2, 3, 4, 5].filter((p) => src.forms[p]?.stem === i).slice(0, 3))
+      .map((p) => say('fr', p, src.forms[p]!, src.tense))
+    return { s, i, persons, labels, sample }
+  })
+  return (
+    <Card className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="h2">{t('stems')}</h2>
+        <span className={`inline-flex min-h-8 items-center rounded-full px-3 text-[13px] font-extrabold ${FAMILY_BADGE[fam]}`}>{familyLabel(fam)}</span>
+      </div>
+      <p className="mut m-0 text-[15px] leading-snug">{t('stemsHint')}</p>
+      <ul className="flex flex-col gap-2" lang="fr">
+        {rows.map(({ s, i, persons, labels, sample }) => (
+          <li key={i} className="flex items-center gap-3 rounded-[14px] bg-soft py-2 pl-3.5 pr-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-baseline gap-x-2">
+                <b className="font-display text-[22px] font-bold" style={{ color: stemColor(i) }}>{s.w}-</b>
+                <span lang="fr-fonipa" className="mut text-[15px]">/{s.ipa}/</span>
+                {persons.length > 0 && <span className="text-sm font-bold">{persons.map((p) => PERSONS.fr[p].label).join(' · ')}</span>}
+              </div>
+              {labels.length > 0 && <p className="mut m-0 text-[13px] leading-snug"><span className="sr-only">{t('stemUsedIn')} </span>{labels.join(', ')}</p>}
+            </div>
+            {sample.length > 0 && <SpeakButton text={sample} variant={target} className="!size-10" />}
+          </li>
+        ))}
+      </ul>
+    </Card>
   )
 }
 
@@ -131,7 +172,7 @@ function Conjugation({ verb, target, native, tab }: { verb: Verb; target: Varian
               </li>
             ))}
           </ul>
-          <div className="px-3.5 pb-1 pt-2.5"><Legend /></div>
+          <div className="px-3.5 pb-1 pt-2.5"><Legend stems={tl === 'fr'} /></div>
           <button type="button" onClick={() => speak(persons.map((d) => line(d.i)), target)}
             className="mx-1 mb-1 mt-2 flex min-h-12 w-[calc(100%-8px)] items-center justify-center gap-2 rounded-[14px] bg-sky-soft px-3 text-[15px] font-extrabold text-[#13579F]">
             <Icon name="speakerLoud" size={20} />{t('hearAll')}
@@ -250,7 +291,9 @@ export function VerbPage({ id }: { id: string }) {
                 )}
               </div>
               <div className="flex flex-wrap justify-center gap-1.5 lg:justify-start">
-                <span className={`inline-flex min-h-8 items-center rounded-full px-3 text-[13px] font-extrabold ${KIND_BADGE[kind]}`}>{t(kind === 'regular' ? 'regular' : kind === 'spelling' ? 'spelling' : 'irregularV')}</span>
+                {tl === 'fr'
+                  ? <span className={`inline-flex min-h-8 items-center rounded-full px-3 text-[13px] font-extrabold ${FAMILY_BADGE[stemFamily(verb.fr)]}`}>{familyLabel(stemFamily(verb.fr))}</span>
+                  : <span className={`inline-flex min-h-8 items-center rounded-full px-3 text-[13px] font-extrabold ${KIND_BADGE[kind]}`}>{t(kind === 'regular' ? 'regular' : kind === 'spelling' ? 'spelling' : 'irregularV')}</span>}
                 <span className="inline-flex min-h-8 items-center gap-1 rounded-full px-3 text-[13px] font-extrabold" style={{ background: cat.bg, color: cat.fg }}><Icon name={cat.icon} size={14} />{t(`cat_${verb.cat}`)}</span>
               </div>
             </div>
@@ -282,6 +325,8 @@ export function VerbPage({ id }: { id: string }) {
               </div>
             )}
           </Card>
+
+          {tl === 'fr' && <StemsCard verb={verb} target={target} />}
 
           <Card className="flex flex-col gap-3">
             <div><h2 className="h2">{t('examples')}</h2><span className="mut text-sm">{t('tapWord')}</span></div>

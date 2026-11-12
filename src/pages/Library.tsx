@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { go } from '../App'
 import { CAT_STYLE, Icon } from '../components/icons'
-import { SpeakButton } from '../components/ui'
+import { SpeakButton, familyLabel } from '../components/ui'
 import { CATEGORIES } from '../data/i18n'
 import { VERBS } from '../data/verbs'
 import { infinitive, verbKind } from '../engine/conjugate'
+import { stemFamily, type StemFamily } from '../engine/french'
 import { learnedCount, t, useProgress, verbProgress } from '../lib/progress'
+
+const FAMILIES: StemFamily[] = [1, 2, 3, 'special']
 
 /** Verb library (design M05): search, filter chips, verb worlds, picture cards with mastery dots. */
 export function Library({ cat }: { cat?: string }) {
@@ -16,8 +19,13 @@ export function Library({ cat }: { cat?: string }) {
   const unlocked = new Set(CATEGORIES.filter((c) => s.xp >= c.xp).map((c) => c.id))
   const needle = q.trim().toLowerCase()
 
+  // "stems-2" = verbs with 2 spoken stems in the present (French).
+  const fam = FAMILIES.find((f) => `stems-${f}` === filter)
   const list = VERBS.filter((v) =>
-    (filter === 'all' ? unlocked.has(v.cat) : filter === 'irregular' ? unlocked.has(v.cat) && verbKind(v, target) === 'irregular' : v.cat === filter) &&
+    (filter === 'all' ? unlocked.has(v.cat)
+      : filter === 'irregular' ? unlocked.has(v.cat) && verbKind(v, target) === 'irregular'
+      : fam ? unlocked.has(v.cat) && stemFamily(v.fr) === fam
+      : v.cat === filter) &&
     (!needle || [infinitive(v, target), infinitive(v, native)].some((w) => w.toLowerCase().includes(needle))),
   )
   const pick = (id: string) => go(id === 'all' ? 'verbs' : `verbs/${id}`)
@@ -35,7 +43,7 @@ export function Library({ cat }: { cat?: string }) {
             className="h-[52px] w-full rounded-2xl border-[1.5px] border-line-strong bg-white pl-12 pr-4 text-base font-semibold text-ink outline-none placeholder:text-subtle focus:border-grape" />
         </label>
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label={t('all')}>
-          {[{ id: 'all', label: t('all') }, { id: 'irregular', label: t('irregular') }].map((c) => (
+          {[{ id: 'all', label: t('all') }, { id: 'irregular', label: t('irregular') }, ...FAMILIES.map((f) => ({ id: `stems-${f}`, label: familyLabel(f) }))].map((c) => (
             <button key={c.id} type="button" onClick={() => pick(c.id)} aria-pressed={filter === c.id} className="chip shrink-0 font-extrabold">{c.label}</button>
           ))}
         </div>
