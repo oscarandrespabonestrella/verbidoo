@@ -103,13 +103,94 @@ const inf = (l: FrLemma): Form => ({ aux: '', word: l.inf, split: base(l.inf).le
 export function frenchNonFinite(l: FrLemma, pron = false) {
   const etre = pron || !!l.etre
   const se = (f: Form) => (pron ? { ...f, aux: join(refl(2, f.aux || f.word), f.aux) } : f)
-  return {
+  const forms = {
     inf: se(inf(l)),
     infPast: se(withAux(pp(l, 0, etre), etre ? 'être' : 'avoir')),
     ppres: se(ppres(l)),
     pp: pp(l, 0, false),
     gerund: (() => { const f = se(ppres(l)); return { ...f, aux: join('en', f.aux) } })(),
   }
+  for (const k of Object.keys(forms) as (keyof typeof forms)[]) forms[k] = tag(l, k, 0, forms[k])
+  return forms
+}
+
+// ── Spoken stems and silent letters ──
+/**
+ * Trailing letters of a French form that are not pronounced: dor|s, dorm|ent, pe|ux, pren|ds, e|st, mange|z, all|é(e)s.
+ * ponytail: spelling rule only — ignores liaison and rare exceptions; add a word list if a reviewer finds one.
+ */
+export function silentTail(word: string, p: number, isInf = false): number {
+  const agree = /\(e\)s?$/.exec(word)?.[0].length ?? 0
+  const w = word.slice(0, word.length - agree)
+  let n = 0
+  if (isInf) n = /(er|re)$/.test(w) ? 1 : 0
+  else if (p === 5 && w.endsWith('ent')) n = 3
+  else if (w.endsWith('es')) n = 2
+  else if (w.endsWith('e')) n = 1
+  else n = /[dtsxz]{0,2}$/.exec(w)![0].length
+  return agree + Math.min(n, w.length - 1) // a word is never all silent: "es" → e|s
+}
+
+export interface Stem { w: string; ipa: string }
+export type StemFamily = 1 | 2 | 3 | 'special'
+interface StemSet { list: Stem[]; pres: number[]; imp: number; fut: number; subj: number[]; ps: number; pp: number }
+
+const parse = (s: string) => s.split(' ').map((x) => { const [w, ipa] = x.split(':'); return { w, ipa } })
+const DEFAULT_MAP = ['000000', '000111', '000112']
+const cache = new Map<FrLemma, StemSet>()
+
+/** The verb's spoken stems, each listed once (same sound = same stem), and which one each tense uses. */
+export function frenchStems(l: FrLemma): StemSet {
+  const hit = cache.get(l)
+  if (hit) return hit
+  const s = l.stems, b = base(l.inf), er = isEr(l)
+  const list: Stem[] = []
+  const add = (st: Stem) => { const i = list.findIndex((x) => x.ipa === st.ipa); return i >= 0 ? i : list.push(st) - 1 }
+  const presList = s ? parse(s.pres) : [{ w: b, ipa: l.ipa.replace(/e$/, '') }]
+  const presIdx = presList.map(add)
+  const pres = [...(s?.map ?? DEFAULT_MAP[presList.length - 1])].map((d) => presIdx[+d])
+  const drop = l.ipa.replace(/ʁ$/, '') // dɔʁmiʁ → dɔʁmi, atɑ̃dʁ → atɑ̃d
+  const one = (x: string | undefined, fallback: Stem) => add(x ? parse(x)[0] : fallback)
+  const set: StemSet = {
+    list, pres,
+    imp: s?.imp ? add(parse(s.imp)[0]) : pres[3],
+    fut: one(s?.fut, { w: l.fut ?? (l.inf.endsWith('re') ? l.inf.slice(0, -1) : l.inf), ipa: er ? presList[0].ipa + 'əʁ' : l.ipa }),
+    subj: s?.subj ? parse(s.subj).map(add) : [],
+    ps: er && !l.ps ? pres[3] : one(s?.ps, { w: b + 'i', ipa: drop }),
+    pp: one(s?.pp, er ? { w: b + 'é', ipa: l.ipa } : l.inf.endsWith('re') ? { w: b + 'u', ipa: drop + 'y' } : { w: b + 'i', ipa: drop }),
+  }
+  cache.set(l, set)
+  return set
+}
+/** 1, 2 or 3 spoken stems in the present; more than 3 (être, avoir, aller, faire) = learn by heart. */
+export function stemFamily(l: FrLemma): StemFamily {
+  const n = new Set(frenchStems(l).pres).size
+  return n > 3 ? 'special' : (n as 1 | 2 | 3)
+}
+/** Stem whose spelling is the longest start of `word` (first wins a tie); used for forms given whole in the data. */
+const longest = (list: Stem[], word: string, cands: number[]) =>
+  cands.reduce((best, i) => (word.startsWith(list[i].w) && list[i].w.length > (best < 0 ? 0 : list[best].w.length) ? i : best), -1)
+
+export const COMPOUND = ['pc', 'pqp', 'futant', 'condp', 'subjp', 'pa', 'subjpqp', 'pp', 'infPast']
+/** Stem index for a form of tense `id` (French tense ids plus the non-finite keys), or undefined for infinitives. */
+function stemFor(l: FrLemma, id: string, p: number, word: string): number | undefined {
+  const st = frenchStems(l), all = st.list.map((_, i) => i)
+  const pick = (cands: number[], fallback: number) => { const i = longest(st.list, word, cands); return i < 0 ? fallback : i }
+  if (id === 'pres') return st.pres[p]
+  if (id === 'imper' || id === 'impneg') return l.imper ? pick([...st.subj, ...st.pres], st.pres[p]) : st.pres[p]
+  if (id === 'imp') return st.imp
+  if (id === 'fut' || id === 'cond') return st.fut
+  if (id === 'ps' || id === 'subjimp') return st.ps
+  if (id === 'subj') return l.subj ? pick([...st.subj, st.pres[3]], st.subj[0]) : p === 3 || p === 4 ? st.imp : st.pres[5]
+  if (id === 'ppres' || id === 'gerund') return l.ppres ? pick(all, st.imp) : st.imp
+  if (COMPOUND.includes(id)) return st.pp
+  return undefined // infinitive, futur proche, présent progressif
+}
+const tag = (l: FrLemma, id: string, p: number, f: Form): Form => {
+  const isInf = id === 'inf' || id === 'prog' || id === 'proche'
+  const stem = stemFor(l, id, p, f.word), silent = silentTail(f.word, p, isInf)
+  const stemLen = stem === undefined ? 0 : Math.min(frenchStems(l).list[stem].w.length, f.word.length - silent)
+  return { ...f, stem, stemLen, silent }
 }
 
 type Build = (l: FrLemma, p: number, pron: boolean) => Form | null
@@ -162,5 +243,7 @@ const TENSES: [Tense, Build][] = [
 
 /** `pron` = pronominal conjugation (se laver: je me lave, je me suis lavé(e), lave-toi). */
 export function conjugateFrench(l: FrLemma, pron = false): TenseTable[] {
-  return TENSES.map(([tense, build]) => ({ tense, forms: [0, 1, 2, 3, 4, 5].map((p) => build(l, p, pron)) }))
+  return TENSES.map(([tense, build]) => ({
+    tense, forms: [0, 1, 2, 3, 4, 5].map((p) => { const f = build(l, p, pron); return f && tag(l, tense.id, p, f) }),
+  }))
 }

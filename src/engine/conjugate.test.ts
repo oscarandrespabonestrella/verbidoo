@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import type { Variant } from '../data/i18n'
 import { verbById, VERBS } from '../data/verbs'
 import { conjugate, formText, say, verbKind } from './conjugate'
-import { frenchNonFinite } from './french'
+import { frenchNonFinite, frenchStems, silentTail, stemFamily } from './french'
 
 const table = (id: string, variant: Variant, tense: string, pron = false) => conjugate(verbById(id)!, variant, pron).find((t) => t.tense.id === tense)!
 const row = (id: string, variant: Variant, tense: string, pron = false) =>
@@ -137,4 +137,50 @@ test('content is well-formed', () => {
   expect(new Set(VERBS.map((v) => v.emoji)).size).toBe(VERBS.length)
   expect(new Set(VERBS.map((v) => v.fr.inf)).size).toBe(VERBS.length)
   expect(VERBS.every((v) => v.fr)).toBe(true)
+})
+
+// ── Spoken stems ──
+test.each([
+  ['dors', 0, 1], ['dort', 2, 1], ['dorment', 5, 3], ['dormons', 3, 1], ['peux', 0, 1], ['prends', 1, 2], ['prend', 2, 1],
+  ['mets', 0, 2], ['est', 2, 2], ['es', 1, 1], ['sommes', 3, 2], ['mangez', 4, 1], ['mange', 0, 1], ['manges', 1, 2],
+  ['mangeaient', 5, 3], ['mangeait', 2, 1], ['ont', 5, 1], ['mangeront', 5, 1], ['mangera', 2, 0], ['allé(e)s', 3, 4],
+  ['mangé', 0, 0], ['connaît', 2, 1], ['dites', 4, 2], ['bûmes', 3, 2], ['a', 2, 0],
+])('silentTail(%s, %i) = %i', (word, p, n) => expect(silentTail(word as string, p as number)).toBe(n))
+test('infinitive: -er and -re lose a letter, -ir and -oir do not', () => {
+  expect(['manger', 'prendre', 'finir', 'voir'].map((w) => silentTail(w, 0, true))).toEqual([1, 1, 0, 0])
+})
+
+const stemsOf = (id: string, tense = 'pres') => {
+  const l = verbById(id)!.fr, list = frenchStems(l).list
+  return table(id, 'fr-FR', tense).forms.map((f) => f && list[f.stem!].w).join(' ')
+}
+test.each([
+  ['talk', 1, 'parl parl parl parl parl parl'], ['sleep', 2, 'dor dor dor dorm dorm dorm'], ['call', 2, 'appell appell appell appel appel appell'],
+  ['can', 3, 'peu peu peu pouv pouv peuv'], ['drink', 3, 'boi boi boi buv buv boiv'], ['be', 'special', 'sui e e somm êt son'],
+])('%s: family %s, present stems', (id, fam, stems) => {
+  expect(stemFamily(verbById(id)!.fr)).toBe(fam)
+  expect(stemsOf(id)).toBe(stems)
+})
+test('stems carry into other tenses', () => {
+  expect(stemsOf('can', 'imp')).toBe('pouv pouv pouv pouv pouv pouv')
+  expect(stemsOf('can', 'fut')).toBe('pourr pourr pourr pourr pourr pourr')
+  expect(stemsOf('drink', 'subj')).toBe('boiv boiv boiv buv buv boiv')
+  expect(stemsOf('go', 'subj')).toBe('aill aill aill all all aill')
+  expect(stemsOf('make', 'pc')).toBe('fai fai fai fai fai fai') // fait /fɛ/ sounds like (je) fais
+})
+test('every French form has a stem whose spelling (or sound-alike) starts it', () => {
+  for (const v of VERBS) {
+    const list = frenchStems(v.fr).list
+    expect(list.every((s) => s.w && s.ipa), v.id).toBe(true)
+    for (const tb of conjugate(v, 'fr-FR')) {
+      for (const f of tb.forms) {
+        if (!f || ['prog', 'proche'].includes(tb.tense.id)) continue
+        const st = list[f.stem!]
+        expect(st, `${v.id} ${tb.tense.id} ${f.word}`).toBeDefined()
+        // Same length start, letters may differ only by accents/ç (dorm-î-mes, commen-ç-ons, d-û).
+        const plainS = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '')
+        if (tb.tense.id === 'pres') expect(plainS(f.word).startsWith(plainS(st.w).slice(0, -1)), `${v.id} ${f.word} ${st.w}`).toBe(true)
+      }
+    }
+  }
 })

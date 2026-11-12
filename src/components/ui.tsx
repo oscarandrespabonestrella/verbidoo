@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { VARIANTS, type Variant } from '../data/i18n'
 import type { Form } from '../engine/conjugate'
+import type { StemFamily } from '../engine/french'
 import { t } from '../lib/progress'
 import { SLOW, canSpeak, hasRecordings, speak, speechSupported, useVoices, voiceFor } from '../lib/speech'
 import { Flame, Icon, Star } from './icons'
@@ -56,17 +57,46 @@ export const XpPill = ({ n, label }: { n: number | string; label?: string }) => 
 
 const KIND_COLOR = { regular: 'text-grape', spelling: 'text-sky', irregular: 'text-rouge-dark' }
 /** Conjugated form with the ending / irregular part colored. */
+/** One colour per spoken stem (French), AA contrast on white and on the highlighted row. Same index = same stem in every tense. */
+export const STEM_COLORS = ['#1E46C4', '#B3245C', '#0E7A4E', '#A84B00', '#7B2BA8', '#0A6A8A', '#5C6B00', '#8A3B12']
+export const stemColor = (i: number) => STEM_COLORS[i % STEM_COLORS.length]
+export const familyLabel = (f: StemFamily) => (f === 'special' ? t('stemSpecial') : f === 1 ? t('stemOne') : t('stemMany', { n: f }))
+
 export function FormView({ form }: { form: Form }) {
+  const w = form.word
+  const end = w.length - (form.silent ?? 0)
   return (
     <span>
       {form.aux && <span className="text-ink/60">{form.aux.endsWith("'") ? form.aux : `${form.aux} `}</span>}
-      <span>{form.word.slice(0, form.split)}</span>
-      <span className={`font-extrabold ${KIND_COLOR[form.kind]}`}>{form.word.slice(form.split)}</span>
+      {form.silent === undefined ? (
+        <>
+          <span>{w.slice(0, form.split)}</span>
+          <span className={`font-extrabold ${KIND_COLOR[form.kind]}`}>{w.slice(form.split)}</span>
+        </>
+      ) : (
+        // French: spoken stem in its colour, audible ending plain, silent letters faded.
+        <>
+          {form.stem !== undefined && <span className="font-extrabold" style={{ color: stemColor(form.stem) }}>{w.slice(0, form.stemLen)}</span>}
+          <span>{w.slice(form.stemLen ?? 0, end)}</span>
+          <span className="text-ink/45">{w.slice(end)}</span>
+        </>
+      )}
       {form.after && <span className="text-ink/60">{form.after.startsWith('-') ? form.after : ` ${form.after}`}</span>}
     </span>
   )
 }
-export function Legend() {
+export function Legend({ stems }: { stems?: boolean }) {
+  if (stems) {
+    return (
+      <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold">
+        <span className="inline-flex items-center gap-1.5">
+          <span className="inline-flex gap-0.5">{STEM_COLORS.slice(0, 3).map((c) => <i key={c} className="size-2.5 rounded-full" style={{ background: c }} />)}</span>
+          {t('legendStem')}
+        </span>
+        <span className="inline-flex items-center gap-1.5 text-ink/45"><i className="size-2.5 rounded-full bg-ink/25" />{t('silentLetters')}</span>
+      </p>
+    )
+  }
   return (
     <p className="flex flex-wrap gap-x-4 gap-y-1 text-sm font-bold">
       <span className="inline-flex items-center gap-1.5 text-grape"><i className="size-2.5 rounded-full bg-grape" />{t('legendEnding')}</span>

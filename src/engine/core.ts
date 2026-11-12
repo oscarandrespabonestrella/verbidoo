@@ -2,7 +2,12 @@ import type { Usage } from '../data/i18n'
 
 export type Kind = 'regular' | 'spelling' | 'irregular'
 /** `aux` + `word` + `after` ("ne mange pas", "lave-toi"); `word.slice(split)` is the part to highlight. */
-export interface Form { aux: string; word: string; split: number; kind: Kind; after?: string }
+export interface Form {
+  aux: string; word: string; split: number; kind: Kind; after?: string
+  stem?: number   // French only: index into frenchStems(l).list — the spoken stem this form is built on
+  stemLen?: number // French only: letters of `word` drawn in the stem colour
+  silent?: number // French only: trailing letters of `word` that are not pronounced
+}
 /** Groups shown in the UI. `wish` = subjunctive, `order` = imperative. */
 export type Time = 'now' | 'past' | 'future' | 'maybe' | 'wish' | 'order'
 export interface Tense {
