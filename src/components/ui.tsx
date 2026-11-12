@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { VARIANTS, type Variant } from '../data/i18n'
 import type { Form } from '../engine/conjugate'
 import type { StemFamily } from '../engine/french'
+import { dismissInstall, installApp, useInstallBanner } from '../lib/install'
 import { t } from '../lib/progress'
 import { SLOW, canSpeak, hasRecordings, speak, speechSupported, useVoices, voiceFor } from '../lib/speech'
 import { Flame, Icon, Star } from './icons'
@@ -125,6 +126,32 @@ export function Confetti() {
       width: 10, height: 14, borderRadius: 3, background: colors[i % colors.length],
     }} />
   ))}</>
+}
+
+/** Quiet, dismissible "install the app" card for Home (see lib/install.ts for when it may appear). */
+export function InstallBanner() {
+  const { show, canPrompt } = useInstallBanner()
+  const [howTo, setHowTo] = useState(false)
+  if (!show) return null
+  const small = 'inline-flex min-h-11 items-center justify-center rounded-full px-4 text-sm font-extrabold'
+  return (
+    // Home only (Dashboard), so it never interrupts a lesson or game.
+    <aside aria-labelledby="install-title" className="card flex animate-pop flex-wrap items-center gap-x-3 gap-y-2 !p-3.5 sm:flex-nowrap">
+      <span aria-hidden className="flex size-9 shrink-0 items-center justify-center rounded-full bg-grape-soft text-grape"><Icon name="download" size={18} /></span>
+      <div className="min-w-0 flex-1 basis-[calc(100%-48px)] sm:basis-auto">
+        <p id="install-title" className="m-0 text-sm font-bold leading-snug">{t('in_title')}</p>
+        {howTo && <p role="status" className="mut m-0 mt-1 text-sm font-bold">{t('in_ios')}</p>}
+      </div>
+      <div className="ml-auto flex shrink-0 gap-1">
+        {!howTo && (
+          <button type="button" className={`${small} bg-grape text-white`} onClick={() => (canPrompt ? void installApp() : setHowTo(true))}>
+            {t('in_install')}
+          </button>
+        )}
+        <button type="button" className={`${small} text-muted hover:bg-white`} onClick={dismissInstall}>{t('in_later')}</button>
+      </div>
+    </aside>
+  )
 }
 
 /** 8px rounded bar. `color` is a Tailwind bg class. */

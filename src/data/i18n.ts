@@ -131,6 +131,7 @@ const en = {
   creditsVoiceNl: 'Dutch voices: “pim” (Netherlands) and “rdh” (Belgium) for the open-source Piper speech engine, public domain (CC0).',
   badge_first: 'First answer', badge_five: '5 verbs learned', badge_ten: '10 verbs learned', badge_streak3: '3-day streak', badge_xp100: '100 XP', badge_perfect: 'Perfect game',
   cat_core: 'Most used', cat_daily: 'Daily life', cat_movement: 'Movement', cat_food: 'Food', cat_school: 'School', cat_communication: 'Talking', cat_family: 'Family & home',
+  in_title: 'Enjoying your learning journey? Install the app for quicker access to your lessons!', in_install: 'Install app', in_later: 'Maybe later', in_ios: 'On iPhone or iPad: tap Share, then “Add to Home Screen”.',
 }
 type Strings = typeof en
 
@@ -212,6 +213,7 @@ const es: Strings = {
   creditsVoiceNl: 'Voces en neerlandés: «pim» (Países Bajos) y «rdh» (Bélgica) para el motor de voz de código abierto Piper, de dominio público (CC0).',
   badge_first: 'Primera respuesta', badge_five: '5 verbos aprendidos', badge_ten: '10 verbos aprendidos', badge_streak3: '3 días seguidos', badge_xp100: '100 XP', badge_perfect: 'Juego perfecto',
   cat_core: 'Más usados', cat_daily: 'Día a día', cat_movement: 'Movimiento', cat_food: 'Comida', cat_school: 'Escuela', cat_communication: 'Hablar', cat_family: 'Familia y casa',
+  in_title: '¿Te gusta aprender con nosotros? Instala la app para llegar más rápido a tus lecciones.', in_install: 'Instalar app', in_later: 'Quizás luego', in_ios: 'En iPhone o iPad: toca Compartir y luego «Añadir a pantalla de inicio».',
 }
 
 const pt: Strings = {
@@ -292,6 +294,7 @@ const pt: Strings = {
   creditsVoiceNl: 'Vozes em neerlandês: «pim» (Países Baixos) e «rdh» (Bélgica) para o motor de voz de código aberto Piper, de domínio público (CC0).',
   badge_first: 'Primeira resposta', badge_five: '5 verbos aprendidos', badge_ten: '10 verbos aprendidos', badge_streak3: '3 dias seguidos', badge_xp100: '100 XP', badge_perfect: 'Jogo perfeito',
   cat_core: 'Mais usados', cat_daily: 'Dia a dia', cat_movement: 'Movimento', cat_food: 'Comida', cat_school: 'Escola', cat_communication: 'Falar', cat_family: 'Família e casa',
+  in_title: 'Estás a gostar de aprender? Instala a app para chegares mais depressa às tuas lições!', in_install: 'Instalar app', in_later: 'Talvez depois', in_ios: 'No iPhone ou iPad: toca em Partilhar e depois em «Adicionar ao ecrã principal».',
 }
 
 // ponytail: pt UI uses tu-forms (informal, works in both variants); split into pt-BR/pt-PT strings if testers ask.

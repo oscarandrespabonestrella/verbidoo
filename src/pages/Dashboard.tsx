@@ -6,6 +6,7 @@ import {
   ProgressBar,
   StreakPill,
   VoiceWarning,
+  InstallBanner,
   XpPill,
 } from "../components/ui";
 import { CATEGORIES, langOf } from "../data/i18n";
@@ -133,6 +134,7 @@ export function Dashboard() {
       </header>
 
       <VoiceWarning variant={target} />
+      <InstallBanner />
 
       <div className="grid gap-4 lg:grid-cols-[repeat(auto-fit,minmax(min(340px,100%),1fr))] lg:gap-5">
         {/* Hero (design V2-Home): the mascot with the flag over its country, its bubble, then today's goal + Continue on glass. */}
