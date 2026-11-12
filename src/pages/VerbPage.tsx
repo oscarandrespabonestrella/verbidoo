@@ -242,7 +242,12 @@ export function VerbPage({ id }: { id: string }) {
             <div className="flex min-w-0 flex-1 flex-col items-center gap-3 lg:items-start">
               <div>
                 <h1 className="m-0 font-display text-[44px] font-bold leading-none text-grape-dark lg:text-[52px]" lang={tl}>{inf}</h1>
-                {syl.length > 1 && <p className="mut mt-1 text-[17px] font-bold tracking-[.12em]" lang={tl}>{syl.join(' · ')}</p>}
+                {(syl.length > 1 || tl === 'fr') && (
+                  <p className="mut mt-1 text-[17px] font-bold tracking-[.12em]" lang={tl}>
+                    {syl.length > 1 && syl.join(' · ')}
+                    {tl === 'fr' && <span lang="fr-fonipa" className="ml-2 font-sans font-medium tracking-normal">/{verb.fr.ipa}/</span>}
+                  </p>
+                )}
               </div>
               <div className="flex flex-wrap justify-center gap-1.5 lg:justify-start">
                 <span className={`inline-flex min-h-8 items-center rounded-full px-3 text-[13px] font-extrabold ${KIND_BADGE[kind]}`}>{t(kind === 'regular' ? 'regular' : kind === 'spelling' ? 'spelling' : 'irregularV')}</span>
