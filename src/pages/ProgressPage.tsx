@@ -5,7 +5,7 @@ import { conjugate } from '../engine/conjugate'
 import { TENSE_PATH, accuracy } from '../lib/adaptive'
 import { BADGES, character, facts, learnedCount, learner, levelOf, liveStreak, setCharacter, t, useProfiles, useProgress } from '../lib/progress'
 import { CHARACTERS } from '../lib/rewards'
-import { nameOf } from './Parent'
+import { nameOf } from './Settings'
 
 /** "Tu progreso" tab (design M04): level, tenses, characters, badges. */
 export function ProgressPage() {
@@ -29,7 +29,7 @@ export function ProgressPage() {
         <h1 className="page-title">{t('yourProgress')}</h1>
         <div className="flex gap-2">
           <a href="#/setup" className="pill" aria-label={t('languages')} title={t('languages')}><Icon name="globe" size={18} /><span className="hidden sm:inline">{t('languages')}</span></a>
-          <a href="#/parent" className="pill lg:hidden" aria-label={t('grownUps')} title={t('grownUps')}><Icon name="lock" size={18} /><span className="hidden sm:inline">{t('grownUps')}</span></a>
+          <a href="#/settings" className="pill lg:hidden" aria-label={t('grownUps')} title={t('grownUps')}><Icon name="settings" size={18} /><span className="hidden sm:inline">{t('grownUps')}</span></a>
         </div>
       </header>
 

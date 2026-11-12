@@ -9,7 +9,7 @@ import { VERBS, type Verb } from '../data/verbs'
 import { conjugate, formText, infinitive, pronounFor, type Form, type Tense } from '../engine/conjugate'
 import { buildSession, levelFor, pickKind, tenseWeight, type Learner } from '../lib/adaptive'
 import { CUE_WORD, makeQ, verbLabel, type Kind, type Q, type TimeCue } from '../lib/games'
-import { answer, awardBadges, learner, liveStreak, openVerbs, overLimit, praise, t, useProgress, type AnswerResult, type State } from '../lib/progress'
+import { answer, awardBadges, learner, liveStreak, openVerbs, praise, t, useProgress, type AnswerResult, type State } from '../lib/progress'
 import { MISSIONS, MISSION_XP, WEEKLY_XP } from '../lib/rewards'
 import { canSpeak, speak } from '../lib/speech'
 
@@ -141,23 +141,6 @@ export function Practice({ game, focus }: { game?: string; focus?: string }) {
 
   if (!valid) return <Picker />
   const fullScreen = 'flex min-h-[calc(100dvh-3rem)] flex-col'
-  // Parent's daily limit: finish the current feedback, then a friendly stop (progress is already saved).
-  if (overLimit(s) && given === null) {
-    return (
-      <div className={`${fullScreen} animate-pop items-center gap-5 overflow-hidden rounded-[28px] bg-[#14205E] px-5 pb-7 pt-12 text-center text-white`}>
-        <Gaston pose="face" size={150} className="gaston-shadow" />
-        <div className="flex flex-col items-center gap-2">
-          <h1 className="m-0 font-display text-[34px] font-bold leading-tight">{t('breakTitle')}</h1>
-          <p className="m-0 max-w-[300px] text-lg leading-relaxed text-[#DDE1FF]">{t('breakDesc')}</p>
-        </div>
-        <div className="mt-2 grid w-full max-w-md grid-cols-2 gap-2.5 text-left">
-          <div className="flex min-w-0 flex-col gap-0.5 rounded-[18px] bg-[#2F3A73] p-4"><b className="font-display text-[26px] font-bold text-[#FFD27A]">{s.xp} XP</b><span className="text-sm font-bold text-[#DDE1FF]">{t('gm_total')}</span></div>
-          <div className="flex min-w-0 flex-col gap-0.5 rounded-[18px] bg-[#2F3A73] p-4"><b className="font-display text-[26px] font-bold text-[#FFB199]">{liveStreak(s)}</b><span className="text-sm font-bold text-[#DDE1FF]">{t('streak')}</span></div>
-        </div>
-        <button type="button" onClick={() => go('')} className="btn btn-ghost mt-auto w-full max-w-md">{t('backHome')}</button>
-      </div>
-    )
-  }
   if (!q) {
     const stars = Math.max(1, Math.round((right / Math.max(1, done)) * 3))
     return (

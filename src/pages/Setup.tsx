@@ -71,8 +71,8 @@ export function Setup() {
         <button type="button" className="btn btn-primary w-full !min-h-14 !text-lg" disabled={!native}
           onClick={() => { setLanguages(native!, target); go('') }}>{str.start}<Icon name="arrowRight" /></button>
         {nl && <p className="mut m-0 text-center text-sm">{str.hm_changeLater}</p>}
-        <a href="#/parent" className="mx-auto inline-flex min-h-12 items-center gap-2 rounded-full border border-line-strong bg-white px-5 text-[15px] font-extrabold text-ink">
-          <Icon name="lock" size={18} />{str.grownUps}
+        <a href="#/settings" className="mx-auto inline-flex min-h-12 items-center gap-2 rounded-full border border-line-strong bg-white px-5 text-[15px] font-extrabold text-ink">
+          <Icon name="settings" size={18} />{str.grownUps}
         </a>
       </div>
     </div>

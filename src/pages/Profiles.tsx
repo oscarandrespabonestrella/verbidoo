@@ -3,11 +3,11 @@ import { Gaston, Logo, ParisScene } from '../components/gaston'
 import { Icon } from '../components/icons'
 import { Avatar } from '../components/ui'
 import { switchProfile, t, useProfiles } from '../lib/progress'
-import { nameOf } from './Parent'
+import { nameOf } from './Settings'
 
 const TINTS = ['#FFF1E3', '#E6EDFE', '#E3F6EE', '#E3F4FD', '#FFF4D6', '#FFEDEA']
 
-/** "Bonjour ! Who plays?" (design V2-Welcome) — Gaston waves the flag over Paris; children pick their own avatar. Adding or removing children is in the parent area. */
+/** "Bonjour ! Who plays?" (design V2-Welcome) — Gaston waves the flag over Paris; children pick their own avatar. Adding, editing or removing profiles is in settings. */
 export function Profiles() {
   const idx = useProfiles()
   return (
@@ -30,12 +30,12 @@ export function Profiles() {
                 <b className="max-w-full truncate font-display text-[19px] font-semibold">{nameOf(p, i)}</b>
               </button>
             ))}
-            <a href="#/parent" className="flex min-h-[120px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-[22px] border-2 border-dashed border-[#C9D4EA] px-2 text-center text-sm font-extrabold text-muted">
+            <a href="#/settings" className="flex min-h-[120px] min-w-0 flex-col items-center justify-center gap-1.5 rounded-[22px] border-2 border-dashed border-[#C9D4EA] px-2 text-center text-sm font-extrabold text-muted">
               <Icon name="plus" />{t('hm_addPlayer')}
             </a>
           </div>
-          <a href="#/parent" className="inline-flex min-h-11 items-center gap-1.5 self-center px-4 text-sm font-bold text-ink">
-            <Icon name="lock" size={18} />{t('grownUps')}
+          <a href="#/settings" className="inline-flex min-h-11 items-center gap-1.5 self-center px-4 text-sm font-bold text-ink">
+            <Icon name="settings" size={18} />{t('grownUps')}
           </a>
         </section>
       </div>

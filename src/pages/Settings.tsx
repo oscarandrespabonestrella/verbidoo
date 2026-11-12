@@ -9,7 +9,7 @@ import { accuracy, trickyVerbs } from '../lib/adaptive'
 import { cloudConfigured, deleteAccount, resetPassword, setNewPassword, signIn, signOut, signUp, syncNow, useCloud } from '../lib/cloud'
 import type { Kind } from '../lib/games'
 import {
-  addProfile, eraseProgress, exportAll, learnedCount, learner, liveStreak, openVerbs, profileState, removeProfile, setControls,
+  addProfile, editProfile, eraseProgress, exportAll, learnedCount, learner, liveStreak, openVerbs, profileState, removeProfile, setControls,
   t, useProfiles, useProgress, type Profile, type State,
 } from '../lib/progress'
 import { weekOf } from '../lib/rewards'
@@ -147,21 +147,9 @@ function Rules({ id, s }: { id: string; s: State }) {
   )
   const steps = [3, 5, 8]
   const at = Math.max(0, steps.indexOf(c.newPerDay))
-  const mins = [0, 15, 30, 45, 60]
   return (
     <Card className="flex flex-col gap-4">
       <H2>{t('rules')}</H2>
-      <div className="flex flex-col gap-2">
-        <span className="text-[15px] font-extrabold">{t('ctlMinutes')}</span>
-        <div role="radiogroup" aria-label={t('ctlMinutes')} className="grid grid-cols-[repeat(5,minmax(0,1fr))] gap-1 rounded-[14px] bg-[#E9EBF4] p-1">
-          {mins.map((n) => (
-            <button key={n} type="button" role="radio" aria-checked={c.dailyMinutes === n} onClick={() => setControls(id, { dailyMinutes: n })}
-              className={`min-h-11 min-w-0 rounded-[10px] px-1 text-[13px] font-extrabold leading-tight ${c.dailyMinutes === n ? 'bg-white text-ink shadow-[0_1px_3px_rgba(36,48,94,.12)]' : 'text-muted'}`}>
-              {n ? t('minutesN', { n }) : t('noLimit')}
-            </button>
-          ))}
-        </div>
-      </div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <span className="min-w-0 text-[15px] font-extrabold">{t('ctlNewPerDay')}</span>
         <div className="flex items-center gap-1 rounded-[14px] bg-soft p-1">
@@ -179,7 +167,7 @@ function Rules({ id, s }: { id: string; s: State }) {
   )
 }
 
-/** Notices and errors from the cloud layer, in the parent's language (Supabase's own error text is shown as is). */
+/** Notices and errors from the cloud layer, in the UI language (Supabase's own error text is shown as is). */
 const cloudMessage = (key: string | null, kind: 'n' | 'e') =>
   !key ? null : kind === 'n' ? t(`n_${key}` as StringKey) : key === 'offline' ? t('e_offline') : key
 
@@ -253,7 +241,7 @@ export function CloudCard() {
 
 type Section = 'report' | 'settings' | 'account'
 
-function ParentArea() {
+export function Settings() {
   const idx = useProfiles()
   const cloud = useCloud()
   useProgress() // re-render when the active profile's data changes
@@ -262,6 +250,7 @@ function ParentArea() {
   const [tab, setTab] = useState<Section>(cloud.recovery ? 'account' : 'report')
   const [name, setName] = useState('')
   const [avatar, setAvatar] = useState(AVATARS[1])
+  const [editing, setEditing] = useState<string | null>(null) // profile id being edited in the form below, null = adding
   const current = idx.list.find((p) => p.id === sel) ?? idx.list[0]
   const i = idx.list.indexOf(current)
   const s = profileState(current.id)
@@ -319,10 +308,15 @@ function ParentArea() {
               <li key={p.id} className="flex min-h-14 items-center gap-3 rounded-[14px] bg-soft py-1.5 pl-3 pr-1.5">
                 <Avatar emoji={p.avatar} size={36} />
                 <b className="min-w-0 flex-1 truncate text-base">{nameOf(p, n)}</b>
+                <button type="button" aria-label={`${t('edit')} · ${nameOf(p, n)}`} title={t('edit')}
+                  className="flex size-11 items-center justify-center rounded-[10px] text-grape hover:bg-white"
+                  onClick={() => { setEditing(p.id); setName(p.name); setAvatar(p.avatar) }}>
+                  <Icon name="pencil" />
+                </button>
                 {idx.list.length > 1 && (
                   <button type="button" aria-label={`${t('remove')} · ${nameOf(p, n)}`} title={t('remove')}
                     className="flex size-11 items-center justify-center rounded-[10px] text-[#A12424] hover:bg-white"
-                    onClick={() => confirm(t('confirmRemove', { name: nameOf(p, n) })) && (removeProfile(p.id), setSel(idx.list.find((x) => x.id !== p.id)!.id))}>
+                    onClick={() => confirm(t('confirmRemove', { name: nameOf(p, n) })) && (removeProfile(p.id), setSel(idx.list.find((x) => x.id !== p.id)!.id), editing === p.id && setEditing(null))}>
                     <Icon name="trash" />
                   </button>
                 )}
@@ -330,8 +324,8 @@ function ParentArea() {
             ))}
           </ul>
           <form className="flex flex-col gap-2.5 border-t border-dashed border-line-strong pt-3.5"
-            onSubmit={(e) => { e.preventDefault(); setSel(addProfile(name, avatar)); setName('') }}>
-            <label className="flex flex-col gap-1.5 text-[15px] font-extrabold">{t('addChild')}
+            onSubmit={(e) => { e.preventDefault(); if (editing) editProfile(editing, name, avatar); else setSel(addProfile(name, avatar)); setEditing(null); setName('') }}>
+            <label className="flex flex-col gap-1.5 text-[15px] font-extrabold">{editing ? `${t('edit')} · ${nameOf(idx.list.find((p) => p.id === editing)!, idx.list.findIndex((p) => p.id === editing))}` : t('addChild')}
               <input value={name} onChange={(e) => setName(e.target.value)} maxLength={20} placeholder={t('nickname')} className={inputCls} />
             </label>
             <div role="radiogroup" aria-label={t('characters')} className="grid grid-cols-[repeat(4,minmax(0,1fr))] gap-2">
@@ -340,7 +334,8 @@ function ParentArea() {
                   className={`emoji flex h-14 items-center justify-center rounded-[14px] border-2 text-3xl ${a === avatar ? 'border-grape bg-grape-soft' : 'border-transparent bg-soft'}`}>{a}</button>
               ))}
             </div>
-            <button type="submit" className="btn btn-primary w-full"><Icon name="plus" />{t('add')}</button>
+            <button type="submit" className="btn btn-primary w-full"><Icon name={editing ? 'check' : 'plus'} />{editing ? t('save') : t('add')}</button>
+            {editing && <button type="button" className="btn btn-ghost w-full" onClick={() => { setEditing(null); setName('') }}>{t('cancel')}</button>}
           </form>
         </Card>
       </>}
@@ -365,4 +360,3 @@ function ParentArea() {
   )
 }
 
-export const Parent = ParentArea
