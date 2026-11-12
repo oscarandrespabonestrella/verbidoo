@@ -1,23 +1,22 @@
 import { useState, type ReactNode } from 'react'
 import { go } from '../App'
 import { Icon, type IconName } from '../components/icons'
-import { Avatar, Card, ProgressBar } from '../components/ui'
+import { ProfileForm, freeAvatar } from '../components/ProfileForm'
+import { Avatar, Card, ProgressBar, SyncButton } from '../components/ui'
 import { CATEGORIES, type StringKey } from '../data/i18n'
 import { VERBS } from '../data/verbs'
 import { infinitive } from '../engine/conjugate'
 import { accuracy, trickyVerbs } from '../lib/adaptive'
-import { cloudConfigured, deleteAccount, resetPassword, setNewPassword, signIn, signOut, signUp, syncNow, useCloud } from '../lib/cloud'
+import { cloudConfigured, deleteAccount, resetPassword, setNewPassword, signIn, signOut, signUp, useCloud } from '../lib/cloud'
 import type { Kind } from '../lib/games'
 import {
-  addProfile, editProfile, eraseProgress, exportAll, learnedCount, learner, liveStreak, openVerbs, profileState, removeProfile, setControls,
-  t, useProfiles, useProgress, type Profile, type State,
+  addProfile, editProfile, eraseProgress, exportAll, learnedCount, learner, liveStreak, nameOf, openVerbs, profileState, removeProfile, setControls,
+  t, useProfiles, useProgress, type State,
 } from '../lib/progress'
 import { weekOf } from '../lib/rewards'
 
 const KINDS: Kind[] = ['picture', 'listen', 'conjugate', 'complete', 'timetravel', 'translate', 'build', 'pronounce']
-const AVATARS = ['🦊', '🐼', '🐸', '🐯', '🐙', '🦁', '🐨', '🐰']
 const DAY = 86_400_000
-export const nameOf = (p: Profile, i: number) => p.name || t('unnamed', { n: i + 1 })
 
 const H2 = ({ icon, children, extra }: { icon?: IconName; children: ReactNode; extra?: ReactNode }) => (
   <div className="flex min-w-0 flex-wrap items-center gap-2.5">
@@ -195,10 +194,7 @@ export function CloudCard() {
   else if (c.email) body = (
     <div className="flex flex-col gap-3">
       <p className="m-0 flex min-w-0 items-center gap-2 font-bold"><Icon name="check" className="text-mint" strokeWidth={3} /><span className="min-w-0">{t('signedInAs', { email: c.email })}</span></p>
-      <p className="mut m-0 text-sm">
-        {c.syncing ? t('syncing') : c.lastSync ? t('lastSynced', { time: new Date(c.lastSync).toLocaleTimeString() }) : ''}
-      </p>
-      <button type="button" disabled={c.syncing} onClick={() => void syncNow()} className="btn btn-primary w-full"><Icon name="repeat" />{t('syncNowBtn')}</button>
+      <SyncButton />
       <button type="button" disabled={busy} onClick={() => void act(signOut)} className="btn btn-ghost w-full"><Icon name="logout" />{t('signOutBtn')}</button>
       <button type="button" disabled={busy} onClick={() => confirm(t('confirmDeleteAccount')) && void act(deleteAccount)} className={btnDanger}>
         <Icon name="trash" />{t('deleteAccountBtn')}</button>
@@ -248,9 +244,8 @@ export function Settings() {
   const [sel, setSel] = useState(idx.active)
   // A password-recovery link lands here: open the account section so the new-password form is visible.
   const [tab, setTab] = useState<Section>(cloud.recovery ? 'account' : 'report')
-  const [name, setName] = useState('')
-  const [avatar, setAvatar] = useState(AVATARS[1])
   const [editing, setEditing] = useState<string | null>(null) // profile id being edited in the form below, null = adding
+  const edited = idx.list.find((p) => p.id === editing)
   const current = idx.list.find((p) => p.id === sel) ?? idx.list[0]
   const i = idx.list.indexOf(current)
   const s = profileState(current.id)
@@ -310,7 +305,7 @@ export function Settings() {
                 <b className="min-w-0 flex-1 truncate text-base">{nameOf(p, n)}</b>
                 <button type="button" aria-label={`${t('edit')} · ${nameOf(p, n)}`} title={t('edit')}
                   className="flex size-11 items-center justify-center rounded-[10px] text-grape hover:bg-white"
-                  onClick={() => { setEditing(p.id); setName(p.name); setAvatar(p.avatar) }}>
+                  onClick={() => setEditing(p.id)}>
                   <Icon name="pencil" />
                 </button>
                 {idx.list.length > 1 && (
@@ -323,20 +318,12 @@ export function Settings() {
               </li>
             ))}
           </ul>
-          <form className="flex flex-col gap-2.5 border-t border-dashed border-line-strong pt-3.5"
-            onSubmit={(e) => { e.preventDefault(); if (editing) editProfile(editing, name, avatar); else setSel(addProfile(name, avatar)); setEditing(null); setName('') }}>
-            <label className="flex flex-col gap-1.5 text-[15px] font-extrabold">{editing ? `${t('edit')} · ${nameOf(idx.list.find((p) => p.id === editing)!, idx.list.findIndex((p) => p.id === editing))}` : t('addChild')}
-              <input value={name} onChange={(e) => setName(e.target.value)} maxLength={20} placeholder={t('nickname')} className={inputCls} />
-            </label>
-            <div role="radiogroup" aria-label={t('characters')} className="grid grid-cols-[repeat(4,minmax(0,1fr))] gap-2">
-              {AVATARS.map((a) => (
-                <button key={a} type="button" role="radio" aria-checked={a === avatar} onClick={() => setAvatar(a)}
-                  className={`emoji flex h-14 items-center justify-center rounded-[14px] border-2 text-3xl ${a === avatar ? 'border-grape bg-grape-soft' : 'border-transparent bg-soft'}`}>{a}</button>
-              ))}
-            </div>
-            <button type="submit" className="btn btn-primary w-full"><Icon name={editing ? 'check' : 'plus'} />{editing ? t('save') : t('add')}</button>
-            {editing && <button type="button" className="btn btn-ghost w-full" onClick={() => { setEditing(null); setName('') }}>{t('cancel')}</button>}
-          </form>
+          {/* key: a fresh form per edited child, and a new free avatar after each add. */}
+          <ProfileForm key={edited?.id ?? `new-${idx.list.length}`} className="border-t border-dashed border-line-strong pt-3.5"
+            title={edited ? `${t('edit')} · ${nameOf(edited, idx.list.indexOf(edited))}` : t('addChild')}
+            initial={edited ?? { name: '', avatar: freeAvatar(idx.list) }} adding={!edited}
+            onSubmit={(name, avatar) => { if (edited) editProfile(edited.id, name, avatar); else setSel(addProfile(name, avatar)); setEditing(null) }}
+            onCancel={edited ? () => setEditing(null) : undefined} />
         </Card>
       </>}
 
