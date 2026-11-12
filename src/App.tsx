@@ -53,7 +53,7 @@ export default function App() {
       {/* Laptop sidebar (design L01–L04). */}
       {!inGame && (
         <aside className="hidden w-64 shrink-0 flex-col gap-6 border-r border-white bg-white/70 px-4 py-6 backdrop-blur-xl lg:sticky lg:top-0 lg:flex lg:h-dvh">
-          <a href="#/" aria-label="Verbi" className="flex items-center px-1"><Logo size={30} /></a>
+          <a href="#/" aria-label="Verbidoo" className="flex items-center px-1"><Logo size={30} /></a>
           <nav aria-label={t('home')} className="flex flex-col gap-1">
             {NAV.map((n) => (
               <a key={n.path} href={`#/${n.path}`} aria-current={isOn(n.match) ? 'page' : undefined}

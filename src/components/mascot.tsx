@@ -36,7 +36,7 @@ export function MascotSays({ children, mood = 'face', size = 84, mascot, classNa
 }
 
 /**
- * Wordmark: the mascot's face + "Verbi" (red dot on the i, blue/red swoosh underneath).
+ * Wordmark: the mascot's face + "Verbidoo" (red dot on the i, blue/red swoosh underneath).
  * Placeholder until the vector logo exists — swap this component for the SVG then.
  */
 export function Logo({ size = 36, className = '' }: { size?: number; className?: string }) {
@@ -45,14 +45,14 @@ export function Logo({ size = 36, className = '' }: { size?: number; className?:
       <Mascot mood="face" size={size * 1.3} />
       <span aria-hidden className="flex flex-col">
         <span className="font-display font-bold leading-[.9]" style={{ fontSize: size }}>
-          Verb<span className="relative">ı<span aria-hidden className="absolute left-1/2 top-[.02em] size-[.24em] -translate-x-1/2 rounded-full bg-rouge" /></span>
+          Verb<span className="relative">ı<span aria-hidden className="absolute left-1/2 top-[.02em] size-[.24em] -translate-x-1/2 rounded-full bg-rouge" /></span>doo
         </span>
-        <svg viewBox="0 0 200 16" width={size * 2.9} height={size * 0.25} aria-hidden>
+        <svg viewBox="0 0 200 16" width={size * 4.2} height={size * 0.25} aria-hidden>
           <path d="M3 13 Q90 0 140 6" stroke="#2B5CE6" strokeWidth="5" fill="none" strokeLinecap="round" />
           <path d="M92 14 Q160 3 197 6" stroke="#EF3340" strokeWidth="5" fill="none" strokeLinecap="round" />
         </svg>
       </span>
-      <span className="sr-only">Verbi</span>
+      <span className="sr-only">Verbidoo</span>
     </span>
   )
 }
