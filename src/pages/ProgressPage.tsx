@@ -1,10 +1,12 @@
+import { LanguagePill } from '../components/mascot'
 import { Icon } from '../components/icons'
 import { Avatar, ProgressBar } from '../components/ui'
 import { VERBS } from '../data/verbs'
 import { conjugate } from '../engine/conjugate'
-import { TENSE_PATH, accuracy } from '../lib/adaptive'
-import { BADGES, character, facts, learnedCount, learner, levelOf, liveStreak, setCharacter, t, useProfiles, useProgress } from '../lib/progress'
-import { CHARACTERS } from '../lib/rewards'
+import { accuracy } from '../lib/adaptive'
+import { targetOf } from '../data/targets'
+import { BADGES, character, charactersFor, facts, learnedCount, learner, levelOf, liveStreak, setCharacter, t, useProfiles, useProgress } from '../lib/progress'
+
 import { nameOf } from './Settings'
 
 /** "Tu progreso" tab (design M04): level, tenses, characters, badges. */
@@ -18,9 +20,9 @@ export function ProgressPage() {
   const name = profile ? nameOf(profile, idx.list.indexOf(profile)) : me.name
   const level = levelOf(s.xp)
   const tenseLabel = (id: string) => conjugate(VERBS[0], target).find((x) => x.tense.id === id)?.tense.label ?? id
-  const fr = target.startsWith('fr')
-  const unlocked = TENSE_PATH.filter((id) => L.unlocked.includes(id))
-  const locked = TENSE_PATH.filter((id) => !L.unlocked.includes(id))
+  const path = targetOf(target).tensePath
+  const unlocked = path.filter((id) => L.unlocked.includes(id))
+  const locked = path.filter((id) => !L.unlocked.includes(id))
   const earned = BADGES.filter((b) => s.badges.includes(b.id)).length
 
   return (
@@ -28,6 +30,7 @@ export function ProgressPage() {
       <header className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="page-title">{t('yourProgress')}</h1>
         <div className="flex gap-2">
+          <LanguagePill />
           <a href="#/setup" className="pill" aria-label={t('languages')} title={t('languages')}><Icon name="globe" size={18} /><span className="hidden sm:inline">{t('languages')}</span></a>
           <a href="#/settings" className="pill lg:hidden" aria-label={t('grownUps')} title={t('grownUps')}><Icon name="settings" size={18} /><span className="hidden sm:inline">{t('grownUps')}</span></a>
         </div>
@@ -43,9 +46,9 @@ export function ProgressPage() {
       </section>
 
       <div className="grid items-start gap-4 lg:grid-cols-2 lg:gap-5">
-        {fr && (
+        {(
           <section className="card flex min-w-0 flex-col gap-3.5 p-[18px]">
-            <div className="flex items-center justify-between gap-2"><h2 className="h2">{t('tensesTitle')}</h2><span className="cap">{t('hm_of', { a: unlocked.length, b: TENSE_PATH.length })}</span></div>
+            <div className="flex items-center justify-between gap-2"><h2 className="h2">{t('tensesTitle')}</h2><span className="cap">{t('hm_of', { a: unlocked.length, b: path.length })}</span></div>
             {unlocked.map((id) => {
               const a = accuracy(L.stats[`tense:${id}`])
               return (
@@ -70,7 +73,7 @@ export function ProgressPage() {
           <section className="card flex min-w-0 flex-col gap-3.5 p-[18px]">
             <h2 className="h2">{t('characters')}</h2>
             <ul className="grid grid-cols-[repeat(auto-fill,minmax(72px,1fr))] gap-3">
-              {CHARACTERS.map((c) => {
+              {charactersFor(s).map((c) => {
                 const open = c.unlocked(f), on = me.id === c.id
                 return (
                   <li key={c.id} className="min-w-0">

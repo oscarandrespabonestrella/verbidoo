@@ -17,7 +17,7 @@ function memoryRemote(rows: RemoteChild[] = []) {
 const vp = (correct: number, wrong = 0) => ({ box: Math.min(5, correct), due: 0, correct, wrong })
 const doc = (s: Partial<State>): State => ({
   native: 'es-ES', target: 'fr-FR', xp: 0, streak: 0, bestStreak: 0, lastDay: '', todayXp: 0, verbs: {}, stats: {}, unlocked: {},
-  newToday: { day: '', ids: [] }, badges: [], daily: { day: '', answers: 0, right: 0, row: 0, bestRow: 0, kindCounts: {}, spoken: 0, activeMs: 0, lastAt: 0, missions: [] },
+  newToday: { day: '', ids: [] }, badges: [], xpBy: {}, badgesBy: {}, variantBy: {}, daily: { day: '', answers: 0, right: 0, row: 0, bestRow: 0, kindCounts: {}, spoken: 0, activeMs: 0, lastAt: 0, missions: [] },
   weekly: { week: '', xp: 0, days: [], missions: 0, done: false }, history: {}, missionsTotal: 0, weeklyWins: 0, character: 'owl',
   controls: { voiceCheck: false, recording: true, newPerDay: 5 }, updatedAt: 0, epoch: 0, ...s,
 })
@@ -91,4 +91,17 @@ describe('syncOnce against an in-memory cloud', () => {
     expect(table.get(id)!.data.xp).toBe(0)
     expect(table.get(id)!.data.target).toBe('fr-FR') // languages kept
   })
+})
+
+test('merge keeps XP and badges per learning language, and reads saves from before Dutch', () => {
+  // An old French-only save (no xpBy) on one device; the other device switched to Dutch later.
+  const old = doc({ xp: 300, badges: ['first', 'xp100'], updatedAt: 1, target: 'fr-FR' })
+  const dutch = doc({ xp: 40, badges: ['first'], xpBy: { fr: 120 }, badgesBy: { fr: ['first'] }, updatedAt: 2, target: 'nl-NL' })
+  const m = mergeStates(old, dutch)
+  expect(m.target).toBe('nl-NL')
+  expect(m.xp).toBe(40)
+  expect(m.badges).toEqual(['first'])
+  expect(m.xpBy).toEqual({ fr: 300, nl: 40 })
+  expect([...m.badgesBy.fr].sort()).toEqual(['first', 'xp100'])
+  expect(mergeStates({ ...old, xpBy: undefined as never }, old).xp).toBe(300)
 })

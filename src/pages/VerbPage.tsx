@@ -4,15 +4,15 @@ import { CAT_STYLE, Icon } from '../components/icons'
 import { BigButton, Card, FormView, Legend, SpeakButton, VoiceWarning, familyLabel, stemColor } from '../components/ui'
 import { PERSONS, VARIANTS, langOf, uiLangOf, type Lang, type Variant } from '../data/i18n'
 import { verbById, type Verb } from '../data/verbs'
-import { COMPOUND, frenchNonFinite, frenchStems, stemFamily } from '../engine/french'
-import { COMPARABLE, conjugate, formText, infinitive, noteFor, pronounFor, say, sentenceFor, syllables, verbKind, type Time } from '../engine/conjugate'
-import { TENSE_PATH } from '../lib/adaptive'
+import { COMPOUND, frenchStems, stemFamily } from '../engine/french'
+import { Mascot } from '../components/mascot'
+import { targetOf } from '../data/targets'
+import { COMPARABLE, conjugate, formText, hasPronominal, infinitive, ipaOf, nonFiniteForms, noteFor, pronounFor, say, sentenceFor, syllables, verbKind, type Time } from '../engine/conjugate'
 import { hasLetter, plain, sentenceTokens, tappedWord } from '../lib/phrases'
 import { learner, markSeen, t, useProgress } from '../lib/progress'
 import { SLOW, repeatLast, speak, speakSyllables } from '../lib/speech'
 
 const TIMES: Time[] = ['now', 'past', 'future', 'maybe', 'order', 'wish']
-const NON_FINITE = { inf: 'Infinitif', infPast: 'Infinitif passé', ppres: 'Participe présent', pp: 'Participe passé', gerund: 'Gérondif' }
 const KIND_BADGE = { regular: 'bg-[#E3F6EE] text-[#06603F]', spelling: 'bg-[#E3F4FD] text-[#13579F]', irregular: 'bg-[#FDECEC] text-[#A12424]' }
 const FAMILY_BADGE = { 1: KIND_BADGE.regular, 2: KIND_BADGE.spelling, 3: KIND_BADGE.irregular, special: KIND_BADGE.irregular }
 type Tab = 'summary' | 'conj' | 'compare'
@@ -90,10 +90,10 @@ function StemsCard({ verb, target }: { verb: Verb; target: Variant }) {
 
 function Conjugation({ verb, target, native, tab }: { verb: Verb; target: Variant; native: Variant; tab: Tab }) {
   const tl = langOf(target)
-  const canPron = tl === 'fr' && !!verb.fr.pronominal
+  const canPron = hasPronominal(verb, target)
   const unlocked = learner(useProgress()).unlocked
   // Reference stays complete; the lock only says the tense is not in games yet.
-  const inGamesLater = (id: string) => tl === 'fr' && TENSE_PATH.includes(id) && !unlocked.includes(id)
+  const inGamesLater = (id: string) => targetOf(target).tensePath.includes(id) && !unlocked.includes(id)
   const [pron, setPron] = useState(false)
   const tables = useMemo(() => conjugate(verb, target, pron), [verb, target, pron])
   const [tenseId, setTenseId] = useState(tables[0].tense.id)
@@ -105,7 +105,7 @@ function Conjugation({ verb, target, native, tab }: { verb: Verb; target: Varian
   const p = table.forms[picked] ? picked : persons[0].i
   const line = (i: number) => say(tl, i, table.forms[i]!, table.tense)
   const rowLabel = (i: number) => (table.tense.imperative ? `(${PERSONS[tl][i].label})` : pronounFor(tl, i, formText(table.forms[i]!), table.tense))
-  const nonFinite = tl === 'fr' ? frenchNonFinite(verb.fr, pron) : null
+  const nonFinite = nonFiniteForms(verb, target, pron)
   // Reuse an example sentence only if it contains exactly this pronoun + form ("j'ai mangé"); else show pronoun + form.
   const match = [0, 1].map((i) => plain(sentenceFor(verb, i, target))).find((s) => s.toLowerCase().includes(line(p).toLowerCase()))
   const times = TIMES.filter((x) => tables.some((tb) => tb.tense.time === x))
@@ -126,7 +126,7 @@ function Conjugation({ verb, target, native, tab }: { verb: Verb; target: Varian
               {[false, true].map((v) => (
                 <button key={String(v)} type="button" onClick={() => setPron(v)} aria-pressed={pron === v} lang={tl}
                   className={`chip !min-h-10 font-display !font-bold ${pron === v ? '!border-sky !bg-sky !text-white' : ''}`}>
-                  {v ? formText(frenchNonFinite(verb.fr, true).inf) : verb.fr.inf}
+                  {v ? formText(nonFiniteForms(verb, target, true)[0].form) : infinitive(verb, target)}
                 </button>
               ))}
             </div>
@@ -183,14 +183,14 @@ function Conjugation({ verb, target, native, tab }: { verb: Verb; target: Varian
           </div>
         </Card>
 
-        {nonFinite && (
+        {nonFinite.length > 0 && (
           <Card className="flex flex-col gap-2.5">
             <h2 className="h2">{t('noPerson')}</h2>
             <ul className="grid grid-cols-[repeat(auto-fit,minmax(min(150px,100%),1fr))] gap-2" lang={tl}>
-              {(Object.keys(NON_FINITE) as (keyof typeof NON_FINITE)[]).map((k) => (
-                <li key={k} className="flex items-center justify-between gap-2 rounded-[14px] bg-soft py-2.5 pl-3.5 pr-2">
-                  <span className="min-w-0"><span className="cap block !text-[11px]">{NON_FINITE[k]}</span><span className="text-[17px]"><FormView form={nonFinite[k]} /></span></span>
-                  <SpeakButton text={formText(nonFinite[k])} variant={target} className="!size-10" />
+              {nonFinite.map(({ key, label, form }) => (
+                <li key={key} className="flex items-center justify-between gap-2 rounded-[14px] bg-soft py-2.5 pl-3.5 pr-2">
+                  <span className="min-w-0"><span className="cap block !text-[11px]">{label}</span><span className="text-[17px]"><FormView form={form} /></span></span>
+                  <SpeakButton text={formText(form)} variant={target} className="!size-10" />
                 </li>
               ))}
             </ul>
@@ -245,13 +245,13 @@ export function VerbPage({ id }: { id: string }) {
     )
   }
   const inf = infinitive(verb, target), syl = syllables(verb, target), kind = verbKind(verb, target), note = noteFor(verb, target)
-  const nl = uiLangOf(native), tl = langOf(target)
+  const nl = uiLangOf(native), tl = langOf(target), ipa = ipaOf(verb, target)
   const cat = CAT_STYLE[verb.cat] ?? CAT_STYLE.core
   const tabs: [Tab, string][] = [['summary', t('vp_summary')], ['conj', t('conjugation')], ['compare', t('compareVoice')]]
   const actions = [
     { label: t('normal'), icon: 'speakerLoud' as const, cls: 'bg-sky text-white', run: () => speak(inf, target) },
     { label: t('slow'), icon: 'turtle' as const, cls: 'bg-sky-soft text-[#0C76B8]', run: () => speak(inf, target, { rate: SLOW }) },
-    { label: t('syllables'), icon: 'hand' as const, cls: 'bg-sun text-[#4A3000]', run: () => speakSyllables(syl, target) },
+    { label: t('syllables'), icon: 'hand' as const, cls: 'bg-sun text-[#4A3000]', run: () => speakSyllables(syl, target, inf) },
     { label: t('repeat'), icon: 'repeat' as const, cls: 'bg-grape text-white', run: repeatLast },
   ]
 
@@ -262,6 +262,7 @@ export function VerbPage({ id }: { id: string }) {
           className="-ml-2 flex size-11 shrink-0 items-center justify-center rounded-full text-ink hover:bg-white"><Icon name="arrowLeft" /></button>
         <b className="min-w-0 flex-1 truncate font-display text-2xl font-bold text-grape-dark lg:hidden" lang={tl}>{inf}</b>
         <span className="mut min-w-0 truncate text-[15px] font-bold lg:hidden">{infinitive(verb, native)}</span>
+        <Mascot mood="studying" size={56} className="ml-auto" />
       </header>
 
       <nav aria-label={inf} className="grid grid-cols-3 gap-1 rounded-2xl bg-[#ECEEF6] p-1 lg:hidden">
@@ -283,10 +284,10 @@ export function VerbPage({ id }: { id: string }) {
             <div className="flex min-w-0 flex-1 flex-col items-center gap-3 lg:items-start">
               <div>
                 <h1 className="m-0 font-display text-[44px] font-bold leading-none text-grape-dark lg:text-[52px]" lang={tl}>{inf}</h1>
-                {(syl.length > 1 || tl === 'fr') && (
+                {(syl.length > 1 || ipa) && (
                   <p className="mut mt-1 text-[17px] font-bold tracking-[.12em]" lang={tl}>
                     {syl.length > 1 && syl.join(' · ')}
-                    {tl === 'fr' && <span lang="fr-fonipa" className="ml-2 font-sans font-medium tracking-normal">/{verb.fr.ipa}/</span>}
+                    {ipa && <span lang={`${tl}-fonipa`} className="ml-2 font-sans font-medium tracking-normal">/{ipa}/</span>}
                   </p>
                 )}
               </div>

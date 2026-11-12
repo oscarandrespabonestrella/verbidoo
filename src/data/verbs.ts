@@ -1,3 +1,4 @@
+import { DUTCH, type NlLemma } from './dutch'
 import { FRENCH, type FrLemma } from './french'
 import { MORE_VERBS } from './verbs-more'
 import type { Category, UiLang, Variant } from './i18n'
@@ -30,12 +31,12 @@ export type Sentence = [string, string, string, string?]
 
 export interface Verb {
   id: string; emoji: string; cat: Category
-  en: EnLemma; es: RomLemma; pt: RomLemma; fr: FrLemma
+  en: EnLemma; es: RomLemma; pt: RomLemma; fr: FrLemma; nl: NlLemma
   mean: Text3
   ex: [Sentence, Sentence] // [easy present, past]
 }
 
-const BASE: Omit<Verb, 'fr'>[] = [
+const BASE: Omit<Verb, 'fr' | 'nl'>[] = [
   {
     id: 'eat', emoji: '🍎', cat: 'food',
     en: { inf: 'eat', past: 'ate', pp: 'eaten', ing: 'eating' },
@@ -389,7 +390,7 @@ const BASE: Omit<Verb, 'fr'>[] = [
   },
 ]
 
-/** French is the language being learned; en/es/pt are the languages the child already speaks. */
-export const VERBS: Verb[] = [...BASE, ...MORE_VERBS].map((v) => ({ ...v, fr: FRENCH[v.id] }))
+/** French and Dutch are the languages being learned; en/es/pt are the languages the child already speaks. */
+export const VERBS: Verb[] = [...BASE, ...MORE_VERBS].map((v) => ({ ...v, fr: FRENCH[v.id], nl: DUTCH[v.id] }))
 
 export const verbById = (id: string) => VERBS.find((v) => v.id === id)

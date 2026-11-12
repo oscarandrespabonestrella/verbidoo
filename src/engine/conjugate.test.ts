@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import type { Variant } from '../data/i18n'
 import { verbById, VERBS } from '../data/verbs'
-import { conjugate, formText, say, verbKind } from './conjugate'
+import { conjugate, formText, infinitive, nonFiniteForms, say, verbKind } from './conjugate'
 import { frenchNonFinite, frenchStems, silentTail, stemFamily } from './french'
 
 const table = (id: string, variant: Variant, tense: string, pron = false) => conjugate(verbById(id)!, variant, pron).find((t) => t.tense.id === tense)!
@@ -77,6 +77,40 @@ test.each([
   ['write', 'fr-FR', 'pa', 'eus écrit eus écrit eut écrit eûmes écrit eûtes écrit eurent écrit'],
   ['want', 'fr-FR', 'imper', '- veuille - veuillons veuillez -'],
   ['want', 'fr-FR', 'subjpqp', 'eusse voulu eusses voulu eût voulu eussions voulu eussiez voulu eussent voulu'],
+  // Dutch: Wiktionary / Taalunie (woordenlijst.org) tables; 't kofschip for weak verbs.
+  ['eat', 'nl-NL', 'ott', 'eet eet eet eten eten eten'],
+  ['be', 'nl-NL', 'ott', 'ben bent is zijn zijn zijn'],
+  ['have', 'nl-BE', 'ott', 'heb hebt heeft hebben hebben hebben'],
+  ['go', 'nl-NL', 'ott', 'ga gaat gaat gaan gaan gaan'],
+  ['work', 'nl-NL', 'ovt', 'werkte werkte werkte werkten werkten werkten'],
+  ['play', 'nl-NL', 'ovt', 'speelde speelde speelde speelden speelden speelden'],
+  ['wait', 'nl-NL', 'ovt', 'wachtte wachtte wachtte wachtten wachtten wachtten'],
+  ['answer', 'nl-NL', 'ovt', 'antwoordde antwoordde antwoordde antwoordden antwoordden antwoordden'],
+  ['believe', 'nl-NL', 'ovt', 'geloofde geloofde geloofde geloofden geloofden geloofden'],
+  ['lose', 'nl-NL', 'ovt', 'verloor verloor verloor verloren verloren verloren'],
+  ['believe', 'nl-NL', 'vtt', 'heb geloofd hebt geloofd heeft geloofd hebben geloofd hebben geloofd hebben geloofd'],
+  ['understand', 'nl-NL', 'vtt', 'heb begrepen hebt begrepen heeft begrepen hebben begrepen hebben begrepen hebben begrepen'],
+  ['finish', 'nl-NL', 'vtt', 'ben geëindigd bent geëindigd is geëindigd zijn geëindigd zijn geëindigd zijn geëindigd'],
+  ['go', 'nl-NL', 'vtt', 'ben gegaan bent gegaan is gegaan zijn gegaan zijn gegaan zijn gegaan'],
+  ['eat', 'nl-NL', 'vvt', 'had gegeten had gegeten had gegeten hadden gegeten hadden gegeten hadden gegeten'],
+  ['arrive', 'nl-NL', 'ott', 'kom aan komt aan komt aan komen aan komen aan komen aan'],
+  ['arrive', 'nl-NL', 'ovt', 'kwam aan kwam aan kwam aan kwamen aan kwamen aan kwamen aan'],
+  ['arrive', 'nl-NL', 'vtt', 'ben aangekomen bent aangekomen is aangekomen zijn aangekomen zijn aangekomen zijn aangekomen'],
+  ['open', 'nl-NL', 'vtt', 'heb opengemaakt hebt opengemaakt heeft opengemaakt hebben opengemaakt hebben opengemaakt hebben opengemaakt'],
+  ['goout', 'nl-NL', 'ott', 'ga naar buiten gaat naar buiten gaat naar buiten gaan naar buiten gaan naar buiten gaan naar buiten'],
+  ['goout', 'nl-NL', 'vtt', 'ben naar buiten gegaan bent naar buiten gegaan is naar buiten gegaan zijn naar buiten gegaan zijn naar buiten gegaan zijn naar buiten gegaan'],
+  ['love', 'nl-NL', 'ott', 'hou van houdt van houdt van houden van houden van houden van'],
+  ['eat', 'nl-NL', 'prog', 'ben aan het eten bent aan het eten is aan het eten zijn aan het eten zijn aan het eten zijn aan het eten'],
+  ['eat', 'nl-NL', 'gaan', 'ga eten gaat eten gaat eten gaan eten gaan eten gaan eten'],
+  ['eat', 'nl-NL', 'ottt', 'zal eten zult eten zal eten zullen eten zullen eten zullen eten'],
+  ['eat', 'nl-NL', 'ovtt', 'zou eten zou eten zou eten zouden eten zouden eten zouden eten'],
+  ['eat', 'nl-NL', 'vttt', 'zal gegeten hebben zult gegeten hebben zal gegeten hebben zullen gegeten hebben zullen gegeten hebben zullen gegeten hebben'],
+  ['come', 'nl-NL', 'vvtt', 'zou gekomen zijn zou gekomen zijn zou gekomen zijn zouden gekomen zijn zouden gekomen zijn zouden gekomen zijn'],
+  ['eat', 'nl-NL', 'imper', '- eet - - - -'],
+  ['arrive', 'nl-NL', 'imper', '- kom aan - - - -'],
+  ['be', 'nl-NL', 'imper', '- wees - - - -'],
+  ['can', 'nl-NL', 'imper', '- - - - - -'],
+  ['eat', 'nl-NL', 'subj', 'ete ete ete eten eten eten'],
 ] as [string, Variant, string, string][])('%s %s %s', (id, variant, tense, expected) => {
   expect(row(id, variant, tense)).toBe(expected)
 })
@@ -183,4 +217,34 @@ test('every French form has a stem whose spelling (or sound-alike) starts it', (
       }
     }
   }
+})
+
+test('Dutch reflexive (zich wassen), non-finite forms and subjects', () => {
+  expect(row('wash', 'nl-NL', 'ott', true)).toBe('was me wast je wast zich wassen ons wassen je wassen zich')
+  expect(row('wash', 'nl-NL', 'vtt', true)).toBe('heb me gewassen hebt je gewassen heeft zich gewassen hebben ons gewassen hebben je gewassen hebben zich gewassen')
+  expect(row('wash', 'nl-NL', 'gaan', true)).toBe('ga me wassen gaat je wassen gaat zich wassen gaan ons wassen gaan je wassen gaan zich wassen')
+  expect(row('wash', 'nl-NL', 'imper', true)).toBe('- was je - - - -')
+  expect(row('wash', 'nl-NL', 'ott', false)).toBe('was wast wast wassen wassen wassen')
+  expect(row('eat', 'nl-NL', 'ott', true)).toBe('eet eet eet eten eten eten') // no reflexive use
+  const nf = (id: string, pron = false) => nonFiniteForms(verbById(id)!, 'nl-NL', pron).map((x) => formText(x.form)).join(' | ')
+  expect(nf('arrive')).toBe('aankomen | aan te komen | aankomend | aangekomen')
+  expect(nf('wash', true)).toBe('zich wassen | zich te wassen | wassend | gewassen')
+  expect(nf('finish')).toBe('eindigen | te eindigen | eindigend | geëindigd')
+  expect(say('nl', 1, table('eat', 'nl-NL', 'ott').forms[1]!)).toBe('jij eet')
+  expect(say('nl', 2, table('be', 'nl-NL', 'ott').forms[2]!)).toBe('hij is')
+  expect(infinitive(verbById('love')!, 'nl-NL')).toBe('houden van')
+  expect(verbKind(verbById('work')!, 'nl-NL')).toBe('regular')
+  expect(verbKind(verbById('eat')!, 'nl-NL')).toBe('irregular')
+})
+
+test('Dutch content is well-formed', () => {
+  for (const v of VERBS) {
+    expect(v.nl, v.id).toBeTruthy()
+    for (const t of [...v.nl.ex, ...(v.nl.exBE ?? [])]) if (t) expect(t, v.id).toMatch(/\{[^}]+\}/)
+    if (v.nl.pres) expect(v.nl.pres.split(' ')).toHaveLength(6)
+    if (v.nl.past) expect(v.nl.past.split(' ')).toHaveLength(2)
+    expect(v.nl.syl.replace(/-/g, ''), v.id).toBe(v.nl.inf.replace(/ /g, ''))
+  }
+  // Games tell verbs apart by the infinitive, so it must be unique.
+  expect(new Set(VERBS.map((v) => v.nl.inf)).size).toBe(VERBS.length)
 })

@@ -1,12 +1,26 @@
 # Verb Adventure — Architecture & Roadmap
 
-Run: `npm install`, `npm run dev` (http://localhost:5173), `npm test` (engine checks), `npm run check:fr` (every French form, plus Spanish/Portuguese simple tenses, vs Wiktionary), `npm run build`.
+Run: `npm install`, `npm run dev` (http://localhost:5173), `npm test` (engine checks), `npm run check:fr` (every French and Dutch form, plus Spanish/Portuguese simple tenses, vs Wiktionary; `npm run check:nl` for Dutch only), `npm run build`.
 
-**Not yet validated by native speakers:** every irregular form in `src/data/french.ts` and `src/data/verbs.ts`, every example sentence, and the spoken stems (`stems`: written stem + IPA, family 1/2/3/special) in `src/data/french.ts`. The engine tests are checked against reference tables, but have a native reviewer for each variant look at the content before real children use it.
+**Not yet validated by native speakers:** every irregular form in `src/data/french.ts`, `src/data/dutch.ts` and `src/data/verbs.ts`, every example sentence, and the spoken stems (`stems`: written stem + IPA, family 1/2/3/special) in `src/data/french.ts`. The engine tests are checked against reference tables, but have a native reviewer for each variant look at the content before real children use it.
 
 ## 0. Product scope
 
-Children learn **French** (France `fr-FR` or Canada `fr-CA`). Their own language (English, Spanish or Portuguese, each with regional variants) is the interface language and the source of all translations, meanings and explanations. French content lives in `src/data/french.ts`; a new target language is a sibling file plus an engine section. The en/es/pt conjugations stay in the engine for the cross-language comparison panel.
+Children learn **French** (France `fr-FR` or Canada `fr-CA`) or **Dutch** (Netherlands `nl-NL` or Belgium `nl-BE`), chosen on the language screen (`#/learn`) and switchable at any time. Their own language (English, Spanish or Portuguese, each with regional variants) is the interface language and the source of all translations, meanings and explanations. The en/es/pt conjugations stay in the engine for the cross-language comparison panel.
+
+### Adding a learning language
+Everything that changes with the language being learned is configuration, not conditions in components:
+
+| Piece | Where |
+|---|---|
+| Name, flag, variants, mascot, exclamations (BRAVO / GOED ZO), Time-Travel cue words, tense unlock path, comparable tenses, recording folders | `src/data/targets.ts` (`TARGETS`) |
+| Mascot: name, default image, image per mood (face, guide, celebrate, approve, sad, thinking, studying, love); missing moods fall back along `FALLBACK` | `src/data/mascots.ts` — rendered by `<Mascot mood>` in `src/components/mascot.tsx`, which always follows the *learning* language |
+| Lemmas (only irregular data), example sentences, regional wording | `src/data/<lang>.ts`, joined to the shared concepts in `src/data/verbs.ts` |
+| Conjugation | `src/engine/<lang>.ts`, dispatched from `src/engine/conjugate.ts` |
+| Home backdrop | a scene component in `src/components/mascot.tsx` (`SCENES`) |
+| Audio | `npm run audio:list` + `scripts/make_audio.py --dir` (docs/AUDIO.md) |
+
+Progress is kept per learning language: verbs, stats and unlocked tenses are keyed by language; XP and badges of the other languages wait in `xpBy` / `badgesBy` and are swapped in by `setLanguages`. Streak, missions and the parent report stay per child.
 
 ## 1. Requirements analysis (what actually drives the design)
 
@@ -23,10 +37,10 @@ Children learn **French** (France `fr-FR` or Canada `fr-CA`). Their own language
 ```
 src/
   data/        content: verbs.ts (concepts, lemmas, irregular forms, sentences), i18n.ts (UI strings, languages, variants, persons)
-  engine/      core.ts (Form/Tense types, joining, elision), french.ts (French engine), conjugate.ts (en/es/pt + entry point). Pure, no React
+  engine/      core.ts (Form/Tense types, joining, elision), french.ts, dutch.ts (learning-language engines), conjugate.ts (en/es/pt + entry point). Pure, no React
 scripts/       wiktionary.test.ts — cross-checks the French, Spanish and Portuguese engines against kaikki.org (Wiktionary) data
   lib/         speech.ts (TTS wrapper), progress.ts (store + spaced repetition)
-  pages/       Dashboard, Library, VerbPage, Practice, Setup
+  pages/       Dashboard, Library, VerbPage, Practice, Setup, Learn (learning-language picker)
   components/  ui.tsx — shared SpeakButton, Mascot, Card, etc.
 ```
 
@@ -84,4 +98,4 @@ Rule: a form ships only if engine output == Wiktionary extract == reviewer sign-
 | 4 Adaptive | `src/lib/adaptive.ts` (pure, tested): Leitner spaced repetition per verb; rolling accuracy per game and per tense; persistent per-game difficulty; 14-step tense path unlocked by mastery (≥ 6 tries, ≥ 75 %); sessions = due → error-prone → ≤ 3 new verbs (≤ 5 new/day); recognition games first for new verbs; weak games/tenses weighted up; dashboard recommendations, tricky verbs, tense map | **Built** |
 | 5 Advanced | Settings area at `#/settings` (report with 14-day chart, per-game accuracy, minutes; preferences: voice checking off by default, recording, new verbs/day; add/edit/remove profiles; JSON export + erase). Several children per device (nickname + avatar only). Daily missions, weekly challenge, 7 unlockable characters, 12 badges. Pronunciation: word-by-word feedback, model-vs-me compare; self-checks excluded from stats. `src/lib/rewards.ts` + store tests | **Built** |
 | 5b Cloud accounts | Parent-owned Supabase accounts (email + password, consent at sign-up, password reset, delete account). Conflict-safe merge sync per child (`src/lib/sync.ts`), auto-sync on change / start / reconnect. Library loaded only when configured. Setup: [docs/CLOUD.md](CLOUD.md) | **Built** — not yet run against a live project |
-| 5c Pending decision | Another target language (needs validated content + engine section) | Waiting |
+| 6 Dutch | Dutch (nl-NL / nl-BE) as a second learning language: 60 verbs (weak, strong, mixed, irregular, separable *aankomen / openmaken / dichtdoen / naar buiten gaan*, reflexive *zich wassen*, prepositional *houden van*), 12 tenses (OTT, aan het + inf, VTT, gaan + inf, imperative, OVT, OTTT, OVTT, VVT, VTTT, VVTT, archaic subjunctive) + non-finite forms; Wiktionary check 1,320 forms, 0 mismatches (1 reviewed auxiliary exception). Language screen, config-driven mascots (Gaston / Ollie), per-language XP and badges, Piper recordings per variant | **Built** — content not yet reviewed by a native speaker |

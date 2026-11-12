@@ -1,7 +1,9 @@
 import { PERSONS, langOf, type Lang, type Usage, type Variant } from '../data/i18n'
 import type { EnLemma, RomLemma, Verb } from '../data/verbs'
 import { formText, join, mk, six, vowelStart, withAux, type Form, type Kind, type Tense, type TenseTable, type Time } from './core'
-import { conjugateFrench } from './french'
+import { TARGETS } from '../data/targets'
+import { conjugateDutch, dutchNonFinite } from './dutch'
+import { conjugateFrench, frenchNonFinite } from './french'
 
 export { formText, type Form, type Kind, type Tense, type TenseTable, type Time }
 
@@ -159,7 +161,7 @@ const PT: [string, string, Time, 1 | 2 | 3, RomBuild][] = [
 // ponytail: Futuro do presente simple is mostly written; speech uses "ir + infinitivo". Tagged formal so the UI says so.
 const USAGE: Record<string, Usage> = { 'pt.fut': 'formal' }
 
-/** `pron` only applies to French verbs that have a pronominal use (laver → se laver). */
+/** `pron` only applies to verbs that have a pronominal / reflexive use (se laver, zich wassen). */
 export function conjugate(v: Verb, variant: Variant, pron = false): TenseTable[] {
   const lang = langOf(variant)
   const range = [0, 1, 2, 3, 4, 5]
@@ -169,9 +171,8 @@ export function conjugate(v: Verb, variant: Variant, pron = false): TenseTable[]
       forms: range.map((p) => withAux(enWord(v.en, part, p), typeof aux === 'string' ? aux : aux[p])),
     }))
   }
-  if (lang === 'fr') {
-    return conjugateFrench(v.fr, pron && !!v.fr.pronominal)
-  }
+  if (lang === 'fr') return conjugateFrench(v.fr, pron && !!v.fr.pronominal)
+  if (lang === 'nl') return conjugateDutch(v.nl, pron && !!v.nl.refl)
   const l = lemmaFor(v, lang, variant)
   return (lang === 'es' ? ES : PT).map(([id, label, time, level, build]) => ({
     tense: { id, label, time, level, usage: USAGE[`${lang}.${id}`] },
@@ -179,17 +180,39 @@ export function conjugate(v: Verb, variant: Variant, pron = false): TenseTable[]
   }))
 }
 
-export const infinitive = (v: Verb, variant: Variant) => {
+/** The lemma for a variant: French and Dutch have one per verb; Spanish/Portuguese may have regional overrides. */
+const lemma = (v: Verb, variant: Variant) => {
   const lang = langOf(variant)
-  return lang === 'en' ? v.en.inf : lang === 'fr' ? v.fr.inf : lemmaFor(v, lang, variant).inf
+  return lang === 'en' ? v.en : lang === 'fr' || lang === 'nl' ? v[lang] : lemmaFor(v, lang, variant)
+}
+/** Dictionary form: "manger", "houden van". */
+export const infinitive = (v: Verb, variant: Variant) => {
+  const l = lemma(v, variant)
+  return 'prep' in l && l.prep ? `${l.inf} ${l.prep}` : l.inf
 }
 export const syllables = (v: Verb, variant: Variant) => {
-  const lang = langOf(variant)
-  return lang === 'en' ? [v.en.inf] : (lang === 'fr' ? v.fr : lemmaFor(v, lang, variant)).syl.split('-')
+  const l = lemma(v, variant)
+  return 'syl' in l ? l.syl.split('-') : [l.inf]
 }
-export const noteFor = (v: Verb, variant: Variant) => {
+export const noteFor = (v: Verb, variant: Variant) => lemma(v, variant).note
+/** Broad IPA of the infinitive, when the content has it (French, Dutch). */
+export const ipaOf = (v: Verb, variant: Variant) => { const l = lemma(v, variant); return 'ipa' in l ? l.ipa : undefined }
+/** Whether the verb has a pronominal / reflexive use the conjugation table can switch to. */
+export const hasPronominal = (v: Verb, variant: Variant) => {
   const lang = langOf(variant)
-  return lang === 'en' ? v.en.note : lang === 'fr' ? v.fr.note : lemmaFor(v, lang, variant).note
+  return lang === 'fr' ? !!v.fr.pronominal : lang === 'nl' ? !!v.nl.refl : false
+}
+
+const NON_FINITE_LABELS: Record<string, Record<string, string>> = {
+  fr: { inf: 'Infinitif', infPast: 'Infinitif passé', ppres: 'Participe présent', pp: 'Participe passé', gerund: 'Gérondif' },
+  nl: { inf: 'Infinitief', te: 'Te-infinitief', ppres: 'Onvoltooid deelwoord', pp: 'Voltooid deelwoord' },
+}
+/** The forms with no person (infinitive, participles…), labelled in the target language; empty for en/es/pt. */
+export function nonFiniteForms(v: Verb, variant: Variant, pron = false): { key: string; label: string; form: Form }[] {
+  const lang = langOf(variant)
+  const forms: Record<string, Form> | null = lang === 'fr' ? frenchNonFinite(v.fr, pron && !!v.fr.pronominal)
+    : lang === 'nl' ? dutchNonFinite(v.nl, pron && !!v.nl.refl) : null
+  return forms ? Object.entries(forms).map(([key, form]) => ({ key, label: NON_FINITE_LABELS[lang][key], form })) : []
 }
 
 /** Worst kind across the core (level 1–2) tenses — drives the Regular / Spelling / Irregular badge. */
@@ -199,11 +222,10 @@ export function verbKind(v: Verb, variant: Variant): Kind {
 }
 
 /** Tenses that mean roughly the same thing across languages, for side-by-side comparison. */
-export const COMPARABLE: Record<'now' | 'past' | 'future', Record<Lang, string>> = {
-  now: { en: 'present_simple', es: 'pres', pt: 'pres', fr: 'pres' },
-  past: { en: 'past_simple', es: 'pret', pt: 'pret', fr: 'pc' },
-  future: { en: 'future_simple', es: 'fut', pt: 'fut', fr: 'fut' },
-}
+const OWN = { now: { en: 'present_simple', es: 'pres', pt: 'pres' }, past: { en: 'past_simple', es: 'pret', pt: 'pret' }, future: { en: 'future_simple', es: 'fut', pt: 'fut' } }
+export const COMPARABLE = Object.fromEntries((['now', 'past', 'future'] as const).map((k) => [k, {
+  ...OWN[k], ...Object.fromEntries(Object.values(TARGETS).map((c) => [c.lang, c.compare[k]])),
+}])) as Record<'now' | 'past' | 'future', Record<Lang, string>>
 
 /** Example sentence i (0 = present, 1 = past) for a variant; regional wording falls back to the main one. */
 export function sentenceFor(v: Verb, i: number, variant: Variant): string {
@@ -211,5 +233,6 @@ export function sentenceFor(v: Verb, i: number, variant: Variant): string {
   return ({
     en: s[0], es: s[1], pt: variant === 'pt-PT' ? s[3] ?? s[2] : s[2],
     fr: variant === 'fr-CA' ? v.fr.exCA?.[i] ?? v.fr.ex[i] : v.fr.ex[i],
+    nl: variant === 'nl-BE' ? v.nl.exBE?.[i] ?? v.nl.ex[i] : v.nl.ex[i],
   })[langOf(variant)]
 }

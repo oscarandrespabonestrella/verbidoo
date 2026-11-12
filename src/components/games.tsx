@@ -71,11 +71,11 @@ export function SentenceBuilder({ tiles, answer, variant, locked, onDone }: {
 
   return (
     <div className="space-y-4">
-      <div data-drop="answer" aria-label="answer" lang="fr"
+      <div data-drop="answer" aria-label="answer" lang={variant}
         className="flex min-h-[132px] flex-wrap content-start items-start gap-2.5 rounded-[20px] border-2 border-dashed border-[#C7CCFB] bg-white p-3.5">
         {placed.map((i) => tile(i, '!border-[#C7CCFB] !bg-grape-soft !text-grape-dark'))}
       </div>
-      <div data-drop="bank" lang="fr" className="flex min-h-14 flex-wrap justify-center gap-2.5">
+      <div data-drop="bank" lang={variant} className="flex min-h-14 flex-wrap justify-center gap-2.5">
         {bank.map((i) => tile(i))}
       </div>
       {!locked && (
@@ -164,7 +164,7 @@ export function PronounceChallenge({ phrase, variant, locked, allowRecord, allow
   return (
     <div className="flex flex-col gap-4">
       <div className="card flex flex-col items-center gap-3.5 !rounded-[28px] px-[18px] py-[22px] text-center">
-        <b lang="fr" className="font-display text-[clamp(28px,9vw,44px)] font-bold leading-tight text-grape-dark">{phrase}</b>
+        <b lang={variant} className="font-display text-[clamp(28px,9vw,44px)] font-bold leading-tight text-grape-dark">{phrase}</b>
         <div className="flex gap-3.5">
           <SpeakButton big text={phrase} variant={variant} />
           <SpeakButton big slow text={phrase} variant={variant} />
@@ -198,7 +198,7 @@ export function PronounceChallenge({ phrase, variant, locked, allowRecord, allow
         <div className="card p-4 text-center">
           <p className="m-0 text-lg">{t('youSaid', { s: heard || '…' })}</p>
           {/* Which words came through: green heard, red missed — tells the child exactly what to repeat. */}
-          <p lang="fr" className="m-0 mt-1 flex flex-wrap justify-center gap-1 font-display text-2xl font-bold">
+          <p lang={variant} className="m-0 mt-1 flex flex-wrap justify-center gap-1 font-display text-2xl font-bold">
             {wordMatches(phrase, heard).map((m, i) => (
               <span key={i} className={`rounded-lg px-1.5 ${m.ok ? 'bg-mint-soft text-mint-dark' : 'bg-[#FDECEC] text-[#A12424] underline decoration-wavy'}`}>{m.word}</span>
             ))}

@@ -2,7 +2,7 @@ import { describe, expect, test } from 'vitest'
 import { wordMatches } from './games'
 import {
   activeProfileId, addProfile, answer, dailyOf, eraseProgress, exportAll, learner, profileState, removeProfile,
-  setControls, setLanguages, switchProfile,
+  setControls, setLanguages, switchProfile, xpIn,
 } from './progress'
 import { CHARACTERS, MISSIONS, addActive, dailyMissions, freshDaily, weekOf, weeklyChallenge, type Facts } from './rewards'
 
@@ -88,5 +88,30 @@ describe('progress store (in memory: no localStorage under test)', () => {
     removeProfile(second)
     expect(activeProfileId()).toBe(first)
     expect(JSON.parse(exportAll()).profiles).toHaveLength(1)
+  })
+
+  test('French and Dutch keep separate progress; switching back restores it', () => {
+    const me = () => profileState(activeProfileId())
+    setLanguages('es-ES', 'fr-CA')
+    answer('eat', true, { kind: 'picture', tense: 'pres' })
+    const fr = { xp: me().xp, badges: me().badges, eat: learner(me()).verbs.eat }
+    expect(fr.xp).toBeGreaterThan(0)
+
+    setLanguages('es-ES', 'nl-BE')
+    expect(me().xp).toBe(0)
+    expect(me().badges).toEqual([])
+    expect(learner(me()).verbs.eat).toBeUndefined()
+    expect(learner(me()).unlocked).toEqual(['ott', 'gaan'])
+    answer('eat', false, { kind: 'conjugate', tense: 'ott' })
+    const nlXp = me().xp
+    expect(learner(me()).verbs.eat.wrong).toBe(1)
+
+    setLanguages('es-ES', 'fr-FR')
+    expect(me().xp).toBe(fr.xp)
+    expect(me().badges).toEqual(fr.badges)
+    expect(learner(me()).verbs.eat).toEqual(fr.eat)
+    expect(me().variantBy).toEqual({ fr: 'fr-FR', nl: 'nl-BE' })
+    expect(xpIn(me(), 'nl')).toBe(nlXp)
+    expect(xpIn(me(), 'fr')).toBe(fr.xp)
   })
 })

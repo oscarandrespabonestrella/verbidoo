@@ -1,5 +1,6 @@
 import { useEffect, useSyncExternalStore } from 'react'
-import { Logo } from './components/gaston'
+import { LanguagePill, Logo } from './components/mascot'
+import { Learn } from './pages/Learn'
 import { Avatar } from './components/ui'
 import { Icon, type IconName } from './components/icons'
 import { initCloud, useCloud } from './lib/cloud'
@@ -39,6 +40,7 @@ export default function App() {
   if (page === 'profiles') return <Profiles />
   if (page === 'settings') return <div className="mx-auto max-w-3xl px-4 py-6"><Settings /></div>
   if (!s.native || !s.target || page === 'setup') return <Setup />
+  if (page === 'learn') return <Learn />
 
   // A running game is full-screen (no tabs), like the design's game screens.
   const inGame = page === 'play' && !!arg
@@ -61,6 +63,7 @@ export default function App() {
             ))}
           </nav>
           <div className="mt-auto flex flex-col gap-2">
+            <LanguagePill className="self-start" />
             <a href="#/setup" className="flex min-h-11 items-center gap-3 rounded-[14px] px-3.5 text-sm font-extrabold text-muted hover:bg-white"><Icon name="globe" />{t('languages')}</a>
             <a href="#/settings" className="flex min-h-11 items-center gap-3 rounded-[14px] px-3.5 text-sm font-extrabold text-muted hover:bg-white"><Icon name="settings" />{t('grownUps')}</a>
             <div className="flex items-center gap-2.5 rounded-[18px] bg-white/80 p-2.5 shadow-[0_4px_12px_rgba(20,32,94,0.08)]">

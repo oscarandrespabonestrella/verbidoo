@@ -3,6 +3,7 @@
  * progress.ts owns storage; games.ts and the pages ask this module what to do next.
  */
 import type { StringKey } from '../data/i18n'
+import { TARGETS } from '../data/targets'
 import type { Verb } from '../data/verbs'
 import type { Kind } from './games'
 
@@ -14,6 +15,7 @@ export interface Learner {
   unlocked: string[]                  // tense ids open in games
   newToday: string[]                  // verb ids introduced today
   newPerDay?: number                  // parent setting; defaults to NEW_PER_DAY
+  path?: string[]                     // the target language's tense path; defaults to French
 }
 
 export const DAY = 86_400_000
@@ -33,17 +35,20 @@ export function review(p: VerbProgress | undefined, ok: boolean, now = Date.now(
 }
 
 // ── Progressive tenses ──
-/** Order French tenses open up in games. The reference table always shows all of them. Literary tenses never enter games. */
-export const TENSE_PATH = ['pres', 'proche', 'pc', 'imper', 'prog', 'imp', 'fut', 'impneg', 'cond', 'subj', 'pqp', 'futant', 'condp', 'subjp']
-export const START_TENSES = TENSE_PATH.slice(0, 2)
+/** Order tenses open up in games (per language, in data/targets.ts). The reference table always shows all of them. */
+export const TENSE_PATH = TARGETS.fr.tensePath
+/** The first two tenses of a path are open from the start. */
+export const startTenses = (path: string[]) => path.slice(0, 2)
+export const START_TENSES = startTenses(TENSE_PATH)
 export const UNLOCK_AFTER = { tries: 6, accuracy: 0.75 }
 
 /** Next tense to open, once the most recently opened one is mastered (≥ 6 tries, ≥ 75 % right). */
 export function nextUnlock(l: Learner): string | null {
-  const latest = [...TENSE_PATH].reverse().find((id) => l.unlocked.includes(id))
+  const path = l.path ?? TENSE_PATH
+  const latest = [...path].reverse().find((id) => l.unlocked.includes(id))
   const o = latest ? l.stats[`tense:${latest}`] : undefined
   if (!o || o.length < UNLOCK_AFTER.tries || accuracy(o)! < UNLOCK_AFTER.accuracy) return null
-  return TENSE_PATH.find((id) => !l.unlocked.includes(id)) ?? null
+  return path.find((id) => !l.unlocked.includes(id)) ?? null
 }
 /** Weak and brand-new tenses come up more often. */
 export function tenseWeight(l: Learner, id: string) {
@@ -107,8 +112,9 @@ export interface Rec { icon: string; title: StringKey; vars: Record<string, stri
 /** Up to three next steps, most useful first. `tense` / `kind` / `verb` are filled into the text by the UI. */
 export function recommendations(l: Learner, open: Verb[], allowedKinds: Kind[], now = Date.now()): Rec[] {
   const recs: Rec[] = []
-  const latest = [...TENSE_PATH].reverse().find((id) => l.unlocked.includes(id))
-  if (latest && !START_TENSES.includes(latest) && (l.stats[`tense:${latest}`]?.length ?? 0) < 3) {
+  const path = l.path ?? TENSE_PATH
+  const latest = [...path].reverse().find((id) => l.unlocked.includes(id))
+  if (latest && !startTenses(path).includes(latest) && (l.stats[`tense:${latest}`]?.length ?? 0) < 3) {
     recs.push({ icon: '🔓', title: 'rec_unlocked', vars: {}, tense: latest, path: 'play/conjugate' })
   }
   const due = dueCount(l, open, now)

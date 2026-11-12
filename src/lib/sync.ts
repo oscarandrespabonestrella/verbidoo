@@ -2,8 +2,9 @@
  * Device ↔ cloud sync for children's progress. The merge is pure and conflict-safe:
  * progress a child earned on any device survives, an explicit "erase" wins, and settings follow the newest device.
  */
-import { TENSE_PATH } from './adaptive'
-import { allChildren, applySynced, clearDeletes, pendingDeletes, type ChildDoc, type State } from './progress'
+import { TARGETS } from '../data/targets'
+import { langOf } from '../data/i18n'
+import { allChildren, applySynced, clearDeletes, pendingDeletes, perLanguage, type ChildDoc, type State } from './progress'
 
 /** What the cloud stores per child. */
 export interface RemoteChild { id: string; name: string; avatar: string; data: State }
@@ -36,20 +37,24 @@ export function mergeStates(a: State | undefined, b: State | undefined): State {
   if ((a.epoch ?? 0) !== (b.epoch ?? 0)) return (a.epoch ?? 0) > (b.epoch ?? 0) ? a : b
   const [newer, older] = (a.updatedAt ?? 0) >= (b.updatedAt ?? 0) ? [a, b] : [b, a]
   const answers = (p: { correct: number; wrong: number }) => p.correct + p.wrong
+  // XP and badges per target language: each copy may have been playing a different language when it last saved.
+  const pa = perLanguage({ ...a, xpBy: a.xpBy ?? {}, badgesBy: a.badgesBy ?? {} }), pb = perLanguage({ ...b, xpBy: b.xpBy ?? {}, badgesBy: b.badgesBy ?? {} })
+  const xpBy = mergeRecord(pa.xp, pb.xp, Math.max), badgesBy = mergeRecord(pa.badges, pb.badges, union)
+  const cur = newer.target ? langOf(newer.target) : 'fr'
   return {
     ...newer,
-    xp: Math.max(a.xp, b.xp),
+    xp: xpBy[cur] ?? 0, xpBy, badgesBy, variantBy: { ...older.variantBy, ...newer.variantBy },
     bestStreak: Math.max(a.bestStreak ?? 0, b.bestStreak ?? 0),
     missionsTotal: Math.max(a.missionsTotal ?? 0, b.missionsTotal ?? 0),
     weeklyWins: Math.max(a.weeklyWins ?? 0, b.weeklyWins ?? 0),
-    badges: union(newer.badges, older.badges),
+    badges: badgesBy[cur] ?? [],
     verbs: mergeRecord(newer.verbs, older.verbs, (x, y) => (answers(x) >= answers(y) ? x : y)),
     stats: mergeRecord(newer.stats, older.stats, (x) => x),
     history: mergeRecord(newer.history, older.history, (x, y) => (x.a >= y.a ? x : y)),
-    unlocked: mergeRecord(newer.unlocked, older.unlocked, (x, y) => {
-      const all = union(x, y)
-      return [...TENSE_PATH.filter((t) => all.includes(t)), ...all.filter((t) => !TENSE_PATH.includes(t))]
-    }),
+    unlocked: Object.fromEntries(Object.entries(mergeRecord(newer.unlocked, older.unlocked, union)).map(([lang, all]) => {
+      const path = TARGETS[lang as keyof typeof TARGETS]?.tensePath ?? []
+      return [lang, [...path.filter((t) => all.includes(t)), ...all.filter((t) => !path.includes(t))]]
+    })),
     updatedAt: Math.max(a.updatedAt ?? 0, b.updatedAt ?? 0),
   }
 }

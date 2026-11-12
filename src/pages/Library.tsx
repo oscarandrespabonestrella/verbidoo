@@ -43,7 +43,7 @@ export function Library({ cat }: { cat?: string }) {
             className="h-[52px] w-full rounded-2xl border-[1.5px] border-line-strong bg-white pl-12 pr-4 text-base font-semibold text-ink outline-none placeholder:text-subtle focus:border-grape" />
         </label>
         <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0" role="group" aria-label={t('all')}>
-          {[{ id: 'all', label: t('all') }, { id: 'irregular', label: t('irregular') }, ...FAMILIES.map((f) => ({ id: `stems-${f}`, label: familyLabel(f) }))].map((c) => (
+          {[{ id: 'all', label: t('all') }, { id: 'irregular', label: t('irregular') }, ...(target.startsWith('fr') ? FAMILIES.map((f) => ({ id: `stems-${f}`, label: familyLabel(f) })) : [])].map((c) => (
             <button key={c.id} type="button" onClick={() => pick(c.id)} aria-pressed={filter === c.id} className="chip shrink-0 font-extrabold">{c.label}</button>
           ))}
         </div>

@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
-import { VARIANTS, langOf, type Variant } from '../data/i18n'
+import { VARIANTS, langOf, type TargetLang, type Variant } from '../data/i18n'
+import { TARGETS } from '../data/targets'
 import { clipName } from './phrases'
 
 export const speechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window
@@ -26,10 +27,11 @@ export function voiceFor(variant: Variant) {
 export interface SpeakOpts { rate?: number; onWord?: (charIndex: number) => void; onEnd?: () => void }
 let last: { parts: string[]; variant: Variant; opts: SpeakOpts } | null = null
 
-// ── Recorded French (open-source Piper "siwis" voice, CC BY 4.0 — see docs/AUDIO.md) ──
-const CLIP_BASE = `${import.meta.env.BASE_URL}audio/fr/`
-/** French has studio-quality recordings of every phrase the app says, so it never depends on the device's voices. */
-export const hasRecordings = (variant: Variant) => langOf(variant) === 'fr'
+// ── Recorded learning languages (open-source Piper voices — see docs/AUDIO.md) ──
+/** Recording folder for a variant (public/audio/fr, public/audio/nl-NL…), if it has one. */
+const clipDir = (variant: Variant) => TARGETS[langOf(variant) as TargetLang]?.audio[variant]
+/** Learning languages have recordings of every phrase the app says, so they never depend on the device's voices. */
+export const hasRecordings = (variant: Variant) => !!clipDir(variant)
 export const canSpeak = (variant: Variant) => hasRecordings(variant) || speechSupported
 
 let token = 0                              // bumped by every new speak() — older playback stops itself
@@ -43,9 +45,9 @@ function stopAll() {
 }
 
 /** Plays one recording; resolves false if it is missing or can't play (the caller then falls back). */
-function playClip(text: string, rate: number, onWord?: (i: number) => void) {
+function playClip(text: string, variant: Variant, rate: number, onWord?: (i: number) => void) {
   return new Promise<boolean>((resolve) => {
-    const a = new Audio(CLIP_BASE + clipName(text) + '.mp3')
+    const a = new Audio(`${import.meta.env.BASE_URL}audio/${clipDir(variant)}/${clipName(text)}.mp3`)
     a.playbackRate = rate
     a.preservesPitch = true // slow mode keeps the natural pitch
     let raf = 0
@@ -62,14 +64,14 @@ function playClip(text: string, rate: number, onWord?: (i: number) => void) {
 async function playRecorded(parts: string[], variant: Variant, opts: SpeakOpts, my: number) {
   const rate = (opts.rate ?? 0.9) / 0.9 // browser-voice rates are tuned around 0.9; recordings play at 1
   for (let i = 0; i < parts.length; i++) {
-    const ok = await playClip(parts[i], rate, opts.onWord)
+    const ok = await playClip(parts[i], variant, rate, opts.onWord)
     if (my !== token) return opts.onEnd?.() // interrupted by a newer speak()
-    if (!ok) return synthesize(parts.slice(i), variant, opts) // missing clip: browser voice, if it has French
+    if (!ok) return synthesize(parts.slice(i), variant, opts) // missing clip: browser voice, if the device has one
   }
   opts.onEnd?.()
 }
 
-/** Browser voices (Web Speech API): English, Spanish, Portuguese, and the fallback for French. */
+/** Browser voices (Web Speech API): English, Spanish, Portuguese, and the fallback for the learning languages. */
 function synthesize(parts: string[], variant: Variant, opts: SpeakOpts) {
   if (!speechSupported) return opts.onEnd?.()
   voices = speechSynthesis.getVoices() // may have loaded since the last voiceschanged
@@ -98,4 +100,5 @@ export function speak(text: string | string[], variant: Variant, opts: SpeakOpts
 }
 export const SLOW = 0.55
 export const repeatLast = () => last && speak(last.parts, last.variant, last.opts)
-export const speakSyllables = (syl: string[], variant: Variant) => speak([...syl, syl.join('')], variant, { rate: SLOW })
+/** Each syllable slowly, then the whole word (`whole` for multi-word verbs like "naar buiten gaan"). */
+export const speakSyllables = (syl: string[], variant: Variant, whole = syl.join('')) => speak([...syl, whole], variant, { rate: SLOW })

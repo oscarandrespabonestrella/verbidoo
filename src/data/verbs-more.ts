@@ -5,7 +5,7 @@ import type { Verb } from './verbs'
  * Same rules as verbs.ts: only forms that break the patterns are written out. Every Spanish/Portuguese
  * form is checked against Wiktionary by scripts/wiktionary.test.ts.
  */
-export const MORE_VERBS: Omit<Verb, 'fr'>[] = [
+export const MORE_VERBS: Omit<Verb, 'fr' | 'nl'>[] = [
   {
     id: 'be', emoji: '✨', cat: 'core',
     en: { inf: 'be', past: 'was', pastSix: 'was were was were were were', pp: 'been', ing: 'being', pres: 'am are is are are are' },

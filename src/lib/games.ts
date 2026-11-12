@@ -1,4 +1,5 @@
 import { PERSONS, langOf, type Variant } from '../data/i18n'
+import { TARGETS, isTarget, targetOf } from '../data/targets'
 import { VERBS, type Verb } from '../data/verbs'
 import { conjugate, formText, infinitive, say, sentenceFor, type Form, type Tense, type TenseTable } from '../engine/conjugate'
 import { weightedPick } from './adaptive'
@@ -17,7 +18,7 @@ export interface Q {
   tense?: Tense; person?: number; form?: Form
   stem?: string                                  // complete: shown part of the verb
   from?: { cue: TimeCue; text: string }; to?: TimeCue // timetravel
-  reverse?: boolean                              // translate: French → native
+  reverse?: boolean                              // translate: target language → native
   tiles?: string[]; translation?: string         // build
 }
 
@@ -37,8 +38,8 @@ const quizPersons = (table: TenseTable, target: Variant) =>
   PERSONS[langOf(target)].map((d, i) => ({ d, i }))
     .filter(({ d, i }) => (!d.only || d.only.includes(target)) && !d.usage?.[target] && table.forms[i]).map(({ i }) => i)
 
-/** French time words used as cues in Time Travel. */
-export const CUE_WORD: Record<TimeCue, string> = { past: 'Hier', now: 'Maintenant', future: 'Demain' }
+/** Time words used as cues in Time Travel, in the language being learned (Hier / Gisteren…). */
+export const cueWord = (target: Variant, cue: TimeCue) => targetOf(target).cue[cue]
 
 export function makeQ(kind: Kind, verb: Verb, pool: Verb[], level: number, target: Variant, native: Variant, o: QOpts = {}): Q {
   const n = level === 1 ? 3 : 4
@@ -90,7 +91,7 @@ export function makeQ(kind: Kind, verb: Verb, pool: Verb[], level: number, targe
     kind = 'conjugate' // every form irregular (avoir, aller): fall back to picking the whole form
   }
 
-  if (kind === 'timetravel' && lang === 'fr') {
+  if (kind === 'timetravel' && isTarget(lang)) {
     const q = timeTravelQ(verb, target, level, n, o)
     if (q) return q
   }
@@ -102,7 +103,7 @@ export function makeQ(kind: Kind, verb: Verb, pool: Verb[], level: number, targe
   const wrong = shuffle(uniq(tables.flatMap((x) => x.forms.flatMap((f) => (f ? [formText(f)] : [])))).filter((f) => f !== right)).slice(0, n - 1)
   return { kind: 'conjugate', verb, options: shuffle([right, ...wrong]), answer: right, tense: table.tense, person, form, spoken: say(lang, person, form, table.tense) }
 }
-const COMPARE_NOW: Record<string, string> = { fr: 'pres', es: 'pres', pt: 'pres', en: 'present_simple' }
+const COMPARE_NOW: Record<string, string> = { es: 'pres', pt: 'pres', en: 'present_simple', ...Object.fromEntries(Object.values(TARGETS).map((c) => [c.lang, c.compare.now])) }
 
 /** "nous mang___" → pick the ending. Only regular / spelling-change forms, so the stem is meaningful. */
 function completeQ(verb: Verb, tables: TenseTable[], target: Variant, n: number, o: QOpts): Q | null {
@@ -130,26 +131,29 @@ function completeQ(verb: Verb, tables: TenseTable[], target: Variant, n: number,
  * (imparfait for Hier, the other future for Demain, the progressive for Maintenant).
  */
 function timeTravelQ(verb: Verb, target: Variant, level: number, n: number, o: QOpts): Q | null {
+  // Tense ids per language come from data/targets.ts (French: pres / pc / proche / fut).
+  const c = targetOf(target), lang = c.lang
+  const { now, past, future: fut } = c.compare, near = c.travel.near
   const all = Object.fromEntries(conjugate(verb, target).map((x) => [x.tense.id, x]))
   const open = (id: string) => !o.unlocked || o.unlocked.includes(id)
-  const futureId = open('fut') && (level >= 2 || !open('proche')) ? 'fut' : open('proche') ? 'proche' : null
+  const futureId = open(fut) && (level >= 2 || !open(near)) ? fut : open(near) ? near : null
   // Only travel to and from tenses the child has unlocked.
   const routes = ([
-    ['past', 'pres', 'pc'], ['future', 'pres', futureId], ['now', 'pc', 'pres'], ['now', 'proche', 'pres'],
+    ['past', now, past], ['future', now, futureId], ['now', past, now], ['now', near, now],
   ] as [TimeCue, string, string | null][]).filter(([, from, ans]) => ans && open(from) && open(ans))
   if (!routes.length) return null
   const [to, fromId, answerId] = pick(routes) as [TimeCue, string, string]
-  const alsoRight = { past: ['imp', 'pqp'], future: ['proche', 'fut', 'futant'], now: ['prog'] }[to]
-  const person = pick(quizPersons(all.pres, target))
+  const alsoRight = c.travel.also[to]
+  const person = pick(quizPersons(all[now], target))
   const right = all[answerId].forms[person]!
-  const wrongIds = ['pres', 'pc', 'proche', 'fut', 'imp', 'cond'].filter((id) => id !== answerId && !alsoRight.includes(id))
+  const wrongIds = c.travel.wrong.filter((id) => id !== answerId && !alsoRight.includes(id))
   const wrong = uniq(shuffle(wrongIds).map((id) => formText(all[id].forms[person]!))).filter((w) => w !== formText(right)).slice(0, n - 1)
-  const fromCue: TimeCue = fromId === 'pres' ? 'now' : fromId === 'pc' ? 'past' : 'future'
+  const fromCue: TimeCue = fromId === now ? 'now' : fromId === past ? 'past' : 'future'
   return {
     kind: 'timetravel', verb, person, form: right, tense: all[answerId].tense, to,
-    from: { cue: fromCue, text: say('fr', person, all[fromId].forms[person]!) },
+    from: { cue: fromCue, text: say(lang, person, all[fromId].forms[person]!) },
     options: shuffle([formText(right), ...wrong]), answer: formText(right),
-    spoken: `${CUE_WORD[to]}, ${say('fr', person, right)}`,
+    spoken: `${c.cue[to]}, ${say(lang, person, right)}`,
   }
 }
 

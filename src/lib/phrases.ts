@@ -1,14 +1,13 @@
 /**
- * Every French phrase the app can say, built with the same functions the screens and games use.
- * scripts/audio-list.test.ts writes this list to public/audio/fr/phrases.json, and
+ * Every phrase the app can say in a learning language, built with the same functions the screens and games use.
+ * scripts/audio-list.test.ts writes one list per recording folder (public/audio/<dir>/phrases.json), and
  * scripts/make_audio.py records each phrase with an open-source voice. phrases.test.ts checks the games
  * never say anything that is not in the list.
  */
-import { TARGET_VARIANTS } from '../data/i18n'
+import { TARGET_VARIANTS, langOf, type Variant } from '../data/i18n'
+import { TARGETS, targetOf } from '../data/targets'
 import { VERBS } from '../data/verbs'
-import { conjugate, formText, infinitive, say, sentenceFor, syllables } from '../engine/conjugate'
-import { frenchNonFinite } from '../engine/french'
-import { CUE_WORD } from './games'
+import { conjugate, formText, infinitive, nonFiniteForms, say, sentenceFor, syllables } from '../engine/conjugate'
 
 export const plain = (s: string) => s.replace(/[{}]/g, '')
 /** Sentence split for display: the {verb} group stays one token; spaces are kept as tokens. */
@@ -31,24 +30,30 @@ export function clipName(text: string) {
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36)
 }
 
-export function frenchPhrases(): string[] {
+/** Recording folder → the variants it speaks for (fr → fr-FR + fr-CA, nl-NL → nl-NL). */
+export const AUDIO_DIRS: Record<string, Variant[]> = {}
+for (const c of Object.values(TARGETS)) for (const [v, dir] of Object.entries(c.audio)) (AUDIO_DIRS[dir] ??= []).push(v as Variant)
+
+/** Every phrase said in these variants (default: every learning variant). */
+export function targetPhrases(variants: Variant[] = TARGET_VARIANTS): string[] {
   const out = new Set<string>()
   const add = (s: string) => { if (hasLetter(s)) out.add(s) }
-  for (const variant of TARGET_VARIANTS) for (const v of VERBS) {
+  for (const variant of variants) for (const v of VERBS) {
+    const lang = langOf(variant), c = targetOf(variant)
     add(infinitive(v, variant))
     const syl = syllables(v, variant)
     syl.forEach(add); add(syl.join(''))
     for (const pron of [false, true]) {
       const tables = conjugate(v, variant, pron)
-      for (const t of tables) t.forms.forEach((f, p) => f && add(say('fr', p, f, t.tense)))
-      Object.values(frenchNonFinite(v.fr, pron)).forEach((f) => add(formText(f)))
-      // Time Travel reads the answer with its time word: "Hier, j'ai mangé".
+      for (const t of tables) t.forms.forEach((f, p) => f && add(say(lang, p, f, t.tense)))
+      nonFiniteForms(v, variant, pron).forEach(({ form }) => add(formText(form)))
+      // Time Travel reads the answer with its time word: "Hier, j'ai mangé", "Gisteren, ik heb gegeten".
       const at = (id: string, p: number) => tables.find((x) => x.tense.id === id)!.forms[p]!
       if (!pron) for (let p = 0; p < 6; p++) {
-        add(`${CUE_WORD.past}, ${say('fr', p, at('pc', p))}`)
-        add(`${CUE_WORD.now}, ${say('fr', p, at('pres', p))}`)
-        add(`${CUE_WORD.future}, ${say('fr', p, at('proche', p))}`)
-        add(`${CUE_WORD.future}, ${say('fr', p, at('fut', p))}`)
+        add(`${c.cue.past}, ${say(lang, p, at(c.compare.past, p))}`)
+        add(`${c.cue.now}, ${say(lang, p, at(c.compare.now, p))}`)
+        add(`${c.cue.future}, ${say(lang, p, at(c.travel.near, p))}`)
+        add(`${c.cue.future}, ${say(lang, p, at(c.compare.future, p))}`)
       }
     }
     for (const i of [0, 1]) {
@@ -60,3 +65,5 @@ export function frenchPhrases(): string[] {
   }
   return [...out].sort()
 }
+/** French phrases (fr-FR + fr-CA share one recording folder). */
+export const frenchPhrases = () => targetPhrases(TARGETS.fr.variants)

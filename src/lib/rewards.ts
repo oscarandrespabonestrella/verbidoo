@@ -53,7 +53,7 @@ export interface Facts { xp: number; bestStreak: number; learned: number; tenses
 export interface Character { id: string; emoji: string; name: string; hint?: StringKey; n?: number; unlocked: (f: Facts) => boolean }
 export const levelFromXp = (xp: number) => Math.floor(xp / 100) + 1
 export const CHARACTERS: Character[] = [
-  // Gaston, Verbi's mascot. The id stays 'owl' so saved profiles keep their companion.
+  // The language's mascot (Gaston / Ollie — progress.charactersFor fills in the name). The id stays 'owl' so saved profiles keep their companion.
   { id: 'owl', emoji: '🦕', name: 'Gaston', unlocked: () => true },
   { id: 'fox', emoji: '🦊', name: 'Roxy', hint: 'char_level', n: 3, unlocked: (f) => levelFromXp(f.xp) >= 3 },
   { id: 'cat', emoji: '🐱', name: 'Mimi', hint: 'char_streak', n: 3, unlocked: (f) => f.bestStreak >= 3 },

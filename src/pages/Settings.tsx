@@ -354,6 +354,12 @@ export function Settings() {
             <a className="underline" href="https://huggingface.co/rhasspy/piper-voices/tree/main/fr/fr_FR/siwis" target="_blank" rel="noreferrer">Piper</a> ·{' '}
             <a className="underline" href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noreferrer">CC BY 4.0</a>
           </p>
+          <p className="mut m-0 text-xs leading-relaxed">
+            {t('creditsVoiceNl')}{' '}
+            <a className="underline" href="https://huggingface.co/rhasspy/piper-voices/tree/main/nl/nl_NL/pim" target="_blank" rel="noreferrer">pim</a> ·{' '}
+            <a className="underline" href="https://huggingface.co/rhasspy/piper-voices/tree/main/nl/nl_BE/rdh" target="_blank" rel="noreferrer">rdh</a> ·{' '}
+            <a className="underline" href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noreferrer">CC0</a>
+          </p>
         </Card>
       </>}
     </div>
