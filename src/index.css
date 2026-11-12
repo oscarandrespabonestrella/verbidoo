@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Verbi design system (Gaston proposal): Bleu primary, Marine ink, Rouge accent, Fredoka titles, glass cards on a Ciel sky. */
+/* Verbidoo design system (Gaston proposal): Bleu primary, Marine ink, Rouge accent, Fredoka titles, glass cards on a Ciel sky. */
 @theme {
   --font-display: "Fredoka", "Red Hat Text", system-ui, sans-serif;
   --font-sans: "Red Hat Text", system-ui, sans-serif;

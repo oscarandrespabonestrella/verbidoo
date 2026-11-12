@@ -176,7 +176,7 @@ export function applySynced(children: ChildDoc[]) {
 }
 /** GDPR access / portability: everything this app stores, as one JSON document. */
 export const exportAll = () => JSON.stringify({
-  app: 'Verbi', exportedAt: new Date().toISOString(),
+  app: 'Verbidoo', exportedAt: new Date().toISOString(),
   profiles: index.list.map((p) => ({ profile: p, data: profileState(p.id) })),
 }, null, 2)
 
