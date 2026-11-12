@@ -105,14 +105,10 @@ export function Dashboard() {
 
   return (
     <div className="flex flex-col gap-4 lg:gap-6">
-      {/* Phone header: who + streak/XP pills. */}
+      {/* Phone header: logo, language, who. Streak/XP live on the laptop header only (no room here). */}
       <header className="flex items-center justify-between gap-3 lg:hidden">
         <Logo size={28} className="min-w-0" />
-        <div className="flex shrink-0 gap-1.5">
-          <LanguagePill />
-          <StreakPill n={streak} label={t("streak")} />
-          <XpPill n={s.xp} label={t("xp")} />
-        </div>
+        <LanguagePill className="shrink-0" />
         <a
           href="#/profiles"
           aria-label={`${t("switchPlayer")} (${name})`}
