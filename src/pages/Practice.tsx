@@ -9,6 +9,7 @@ import { VERBS, type Verb } from '../data/verbs'
 import { conjugate, formText, infinitive, pronounFor, type Form, type Tense } from '../engine/conjugate'
 import { buildSession, levelFor, pickKind, tenseWeight, type Learner } from '../lib/adaptive'
 import { makeQ, verbLabel, type Kind, type Q, type TimeCue } from '../lib/games'
+import { markAchievement } from '../lib/install'
 import { answer, awardBadges, learner, liveStreak, openVerbs, praise, t, useProgress, type AnswerResult, type State } from '../lib/progress'
 import { MISSIONS, MISSION_XP, WEEKLY_XP } from '../lib/rewards'
 import { canSpeak, speak } from '../lib/speech'
@@ -138,6 +139,7 @@ export function Practice({ game, focus }: { game?: string; focus?: string }) {
   const [round, setRound] = useState(0) // remount key for the interactive widgets, one per question
 
   useEffect(() => { if (q?.kind === 'listen') speak(q.spoken, target) }, [q, target])
+  useEffect(() => { if (valid && !q && done) markAchievement() }, [valid, q, done]) // a finished session unlocks the install invitation
 
   if (!valid) return <Picker />
   const fullScreen = 'flex min-h-[calc(100dvh-3rem)] flex-col'
