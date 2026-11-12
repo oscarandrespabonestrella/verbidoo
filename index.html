@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Verbidoo</title>
     <meta name="description" content="Master French and Dutch verbs, a few minutes a day. Short, playful conjugation practice with Gaston and Ollie." />
-    <link rel="icon" type="image/webp" href="/img/gaston_face.webp" />
+    <link rel="icon" type="image/png" sizes="64x64" href="/icons/favicon.png" />
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -30,9 +30,12 @@
     <meta name="twitter:title" content="Verbidoo: learn French and Dutch verbs" />
     <meta name="twitter:description" content="Master French and Dutch verbs, a few minutes a day." />
     <meta name="twitter:image" content="https://verbidoo.quest/og-image.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preload" as="image" href="/img/gaston_face.webp" />
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Red+Hat+Text:wght@400;500;600;700;800&family=Noto+Color+Emoji&display=swap" rel="stylesheet" />
+    <!-- Text fonts are bundled (src/main.tsx). Noto Color Emoji stays on Google Fonts, which serves each browser a format it
+         can draw (Safari has no COLRv1), loaded without blocking the first paint; sw.js caches it for offline use. -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Color+Emoji&display=swap" /></noscript>
   </head>
   <body>
     <div id="root"></div>
