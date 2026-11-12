@@ -36,7 +36,7 @@ import {
   isDone,
   weeklyChallenge,
 } from "../lib/rewards";
-import { nameOf } from "./Parent";
+import { nameOf } from "./Settings";
 
 const ALL_KINDS: Kind[] = [
   "picture",

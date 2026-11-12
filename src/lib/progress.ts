@@ -11,9 +11,9 @@ import {
 export const DAILY_GOAL = 50
 export type { VerbProgress }
 
-/** Parent controls, per child. Privacy-first defaults: automatic voice checking (audio leaves the device) is off. */
-export interface Controls { voiceCheck: boolean; recording: boolean; newPerDay: number; dailyMinutes: number }
-export const DEFAULT_CONTROLS: Controls = { voiceCheck: false, recording: true, newPerDay: 5, dailyMinutes: 0 }
+/** Per-profile settings. Privacy-first defaults: automatic voice checking (audio leaves the device) is off. */
+export interface Controls { voiceCheck: boolean; recording: boolean; newPerDay: number }
+export const DEFAULT_CONTROLS: Controls = { voiceCheck: false, recording: true, newPerDay: 5 }
 
 export interface State {
   native: Variant | null; target: Variant | null
@@ -132,6 +132,9 @@ export function addProfile(name: string, avatar: string) {
   saveIndex({ ...index, list: [...index.list, { id, name: name.trim().slice(0, 20), avatar }] })
   return id
 }
+export function editProfile(id: string, name: string, avatar: string) {
+  saveIndex({ ...index, list: index.list.map((p) => (p.id === id ? { ...p, name: name.trim().slice(0, 20), avatar } : p)) })
+}
 export function removeProfile(id: string) {
   if (index.list.length < 2) return
   write(dataKey(id), null)
@@ -184,8 +187,6 @@ export const todayXp = (s: State) => (s.lastDay === today() ? s.todayXp : 0)
 export const liveStreak = (s: State) => (s.lastDay === today() || s.lastDay === today(new Date(Date.now() - DAY)) ? s.streak : 0)
 export const dailyOf = (s: State) => (s.daily.day === today() ? s.daily : freshDaily(today()))
 export const weeklyOf = (s: State) => (s.weekly.week === weekOf() ? s.weekly : freshWeekly(weekOf()))
-/** True once today's play time reaches the parent's daily limit. */
-export const overLimit = (s: State) => s.controls.dailyMinutes > 0 && dailyOf(s).activeMs >= s.controls.dailyMinutes * 60_000
 
 /** The current target language's slice of the state, in the shape the adaptive rules read. */
 export function learner(s: State): Learner {

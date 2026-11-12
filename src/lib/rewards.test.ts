@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { wordMatches } from './games'
 import {
-  activeProfileId, addProfile, answer, dailyOf, eraseProgress, exportAll, learner, overLimit, profileState, removeProfile,
+  activeProfileId, addProfile, answer, dailyOf, eraseProgress, exportAll, learner, profileState, removeProfile,
   setControls, setLanguages, switchProfile,
 } from './progress'
 import { CHARACTERS, MISSIONS, addActive, dailyMissions, freshDaily, weekOf, weeklyChallenge, type Facts } from './rewards'
@@ -62,13 +62,6 @@ describe('progress store (in memory: no localStorage under test)', () => {
     expect(learner(profileState(activeProfileId())).stats['kind:pronounce']).toEqual(before)
     expect(dailyOf(profileState(activeProfileId())).spoken).toBe(1)
     expect(missions.length).toBe(3)
-  })
-
-  test('daily limit', () => {
-    const id = activeProfileId()
-    setControls(id, { dailyMinutes: 15 })
-    expect(overLimit(profileState(id))).toBe(false)
-    setControls(id, { dailyMinutes: 0 })
   })
 
   test('profiles are separate; erase keeps languages and controls; export includes every child', () => {

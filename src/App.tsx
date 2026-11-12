@@ -6,7 +6,7 @@ import { initCloud, useCloud } from './lib/cloud'
 import { levelOf, t, useProfiles, useProgress } from './lib/progress'
 import { Dashboard } from './pages/Dashboard'
 import { Library } from './pages/Library'
-import { Parent, nameOf } from './pages/Parent'
+import { Settings, nameOf } from './pages/Settings'
 import { Practice } from './pages/Practice'
 import { Profiles } from './pages/Profiles'
 import { ProgressPage } from './pages/ProgressPage'
@@ -30,14 +30,14 @@ export default function App() {
   const idx = useProfiles()
   const cloud = useCloud()
   useEffect(() => { void initCloud() }, [])
-  useEffect(() => { if (cloud.recovery) go('parent') }, [cloud.recovery])
+  useEffect(() => { if (cloud.recovery) go('settings') }, [cloud.recovery])
   const [page = '', arg, extra] = useHash().split('/')
   useEffect(() => { scrollTo(0, 0) }, [page, arg])
   useEffect(() => { if (s.native) document.documentElement.lang = s.native }, [s.native])
 
-  // These two work before a child has picked languages: a new child, or a parent setting things up.
+  // These two work before a child has picked languages: a new child, or someone opening settings.
   if (page === 'profiles') return <Profiles />
-  if (page === 'parent') return <div className="mx-auto max-w-3xl px-4 py-6"><Parent /></div>
+  if (page === 'settings') return <div className="mx-auto max-w-3xl px-4 py-6"><Settings /></div>
   if (!s.native || !s.target || page === 'setup') return <Setup />
 
   // A running game is full-screen (no tabs), like the design's game screens.
@@ -62,7 +62,7 @@ export default function App() {
           </nav>
           <div className="mt-auto flex flex-col gap-2">
             <a href="#/setup" className="flex min-h-11 items-center gap-3 rounded-[14px] px-3.5 text-sm font-extrabold text-muted hover:bg-white"><Icon name="globe" />{t('languages')}</a>
-            <a href="#/parent" className="flex min-h-11 items-center gap-3 rounded-[14px] px-3.5 text-sm font-extrabold text-muted hover:bg-white"><Icon name="lock" />{t('grownUps')}</a>
+            <a href="#/settings" className="flex min-h-11 items-center gap-3 rounded-[14px] px-3.5 text-sm font-extrabold text-muted hover:bg-white"><Icon name="settings" />{t('grownUps')}</a>
             <div className="flex items-center gap-2.5 rounded-[18px] bg-white/80 p-2.5 shadow-[0_4px_12px_rgba(20,32,94,0.08)]">
               <Avatar emoji={me?.avatar} size={40} />
               <div className="min-w-0 flex-1"><b className="block truncate text-[15px]">{me ? nameOf(me, meIndex) : ''}</b><span className="mut text-[13px] font-bold">{t('level')} {levelOf(s.xp)}</span></div>
