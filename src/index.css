@@ -2,8 +2,8 @@
 
 /* Verbidoo design system (Gaston proposal): Bleu primary, Marine ink, Rouge accent, Fredoka titles, glass cards on a Ciel sky. */
 @theme {
-  --font-display: "Fredoka", "Red Hat Text", system-ui, sans-serif;
-  --font-sans: "Red Hat Text", system-ui, sans-serif;
+  --font-display: "Fredoka Variable", "Red Hat Text Variable", system-ui, sans-serif;
+  --font-sans: "Red Hat Text Variable", system-ui, sans-serif;
   --color-sun: #fdbe3c;
   --color-grape: #2b5ce6;
   --color-grape-dark: #1e46c4;

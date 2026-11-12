@@ -1,4 +1,4 @@
-import { useEffect, useSyncExternalStore } from 'react'
+import { lazy, Suspense, useEffect, useSyncExternalStore, type ComponentType } from 'react'
 import { LanguagePill, Logo } from './components/mascot'
 import { Learn } from './pages/Learn'
 import { Avatar } from './components/ui'
@@ -6,13 +6,18 @@ import { Icon, type IconName } from './components/icons'
 import { initCloud, useCloud } from './lib/cloud'
 import { levelOf, nameOf, t, useProfiles, useProgress } from './lib/progress'
 import { Dashboard } from './pages/Dashboard'
-import { Library } from './pages/Library'
-import { Settings } from './pages/Settings'
-import { Practice } from './pages/Practice'
-import { Profiles } from './pages/Profiles'
-import { ProgressPage } from './pages/ProgressPage'
 import { Setup } from './pages/Setup'
-import { VerbPage } from './pages/VerbPage'
+
+// Home and first-run setup ship in the main bundle; every other page is its own chunk, fetched on first visit
+// (and precached by sw.js once the app is installed, so later visits are instant).
+const lazyPage = <K extends string>(load: () => Promise<Record<K, ComponentType<any>>>, name: K) =>
+  lazy(() => load().then((m) => ({ default: m[name] })))
+const Library = lazyPage(() => import('./pages/Library'), 'Library')
+const Settings = lazyPage(() => import('./pages/Settings'), 'Settings')
+const Practice = lazyPage(() => import('./pages/Practice'), 'Practice')
+const Profiles = lazyPage(() => import('./pages/Profiles'), 'Profiles')
+const ProgressPage = lazyPage(() => import('./pages/ProgressPage'), 'ProgressPage')
+const VerbPage = lazyPage(() => import('./pages/VerbPage'), 'VerbPage')
 
 // ponytail: a handful of routes, hash-based — no router dependency. Add react-router if routes need loaders/nesting.
 const subscribe = (l: () => void) => (addEventListener('hashchange', l), () => removeEventListener('hashchange', l))
@@ -27,6 +32,10 @@ const NAV: { path: string; icon: IconName; label: 'home' | 'verbs' | 'play' | 'p
 ]
 
 export default function App() {
+  return <Suspense fallback={<div className="min-h-dvh" />}><Routes /></Suspense>
+}
+
+function Routes() {
   const s = useProgress()
   const idx = useProfiles()
   const cloud = useCloud()
@@ -76,11 +85,13 @@ export default function App() {
       )}
 
       <main className={`mx-auto w-full min-w-0 ${inGame ? 'max-w-2xl px-4 pb-8 pt-4' : 'max-w-[1120px] px-4 pb-32 pt-3 sm:px-6 lg:px-12 lg:pb-12 lg:pt-8'}`}>
-        {page === 'verb' ? <VerbPage id={arg} />
-          : page === 'verbs' ? <Library cat={arg} />
-          : page === 'play' ? <Practice key={arg + extra} game={arg} focus={extra} />
-          : page === 'progress' ? <ProgressPage />
-          : <Dashboard />}
+        <Suspense fallback={null /* keeps the nav on screen while a page chunk loads */}>
+          {page === 'verb' ? <VerbPage id={arg} />
+            : page === 'verbs' ? <Library cat={arg} />
+            : page === 'play' ? <Practice key={arg + extra} game={arg} focus={extra} />
+            : page === 'progress' ? <ProgressPage />
+            : <Dashboard />}
+        </Suspense>
       </main>
 
       {/* Phone/tablet floating tab bar (design M03–M08). */}
