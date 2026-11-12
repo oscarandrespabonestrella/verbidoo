@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react'
 import { VARIANTS, type Variant } from '../data/i18n'
 import type { Form } from '../engine/conjugate'
 import type { StemFamily } from '../engine/french'
+import { cloudConfigured, syncNow, useCloud } from '../lib/cloud'
 import { dismissInstall, installApp, useInstallBanner } from '../lib/install'
 import { t } from '../lib/progress'
 import { SLOW, canSpeak, hasRecordings, speak, speechSupported, useVoices, voiceFor } from '../lib/speech'
@@ -152,6 +153,22 @@ export function InstallBanner() {
       </div>
     </aside>
   )
+}
+
+/** "Sync now" with the last-sync status. Renders nothing unless a parent is signed in to the cloud.
+ *  `compact`: a small inline button with the status beside it (profile picker); otherwise a full-width primary button (settings). */
+export function SyncButton({ compact }: { compact?: boolean }) {
+  const c = useCloud()
+  if (!cloudConfigured || !c.email) return null
+  const status = c.syncing ? t('syncing') : c.lastSync ? t('lastSynced', { time: new Date(c.lastSync).toLocaleTimeString() }) : ''
+  const button = (
+    <button type="button" disabled={c.syncing} onClick={() => void syncNow()}
+      className={compact ? 'inline-flex min-h-11 items-center gap-1.5 px-4 text-sm font-bold text-ink disabled:opacity-60' : 'btn btn-primary w-full'}>
+      <Icon name="repeat" size={compact ? 18 : undefined} className={c.syncing ? 'animate-spin' : ''} />{t('syncNowBtn')}
+    </button>
+  )
+  if (compact) return <span className="inline-flex items-center" title={status || undefined}>{button}<span role="status" className="sr-only">{status}</span></span>
+  return <><p role="status" className="mut m-0 text-sm">{status}</p>{button}</>
 }
 
 /** 8px rounded bar. `color` is a Tailwind bg class. */

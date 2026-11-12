@@ -5,9 +5,8 @@ import { VERBS } from '../data/verbs'
 import { conjugate } from '../engine/conjugate'
 import { accuracy } from '../lib/adaptive'
 import { targetOf } from '../data/targets'
-import { BADGES, character, charactersFor, facts, learnedCount, learner, levelOf, liveStreak, setCharacter, t, useProfiles, useProgress } from '../lib/progress'
+import { BADGES, character, charactersFor, facts, learnedCount, learner, levelOf, liveStreak, nameOf, setCharacter, t, useProfiles, useProgress } from '../lib/progress'
 
-import { nameOf } from './Settings'
 
 /** "Tu progreso" tab (design M04): level, tenses, characters, badges. */
 export function ProgressPage() {

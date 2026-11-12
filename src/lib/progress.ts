@@ -126,6 +126,9 @@ export const useProfiles = () => useSyncExternalStore(subscribe, () => index)
 export const activeProfileId = () => index.active
 const saveIndex = (i: Index, isChange = true) => { index = i; write(INDEX_KEY, JSON.stringify(i)); if (isChange) changed(); else notify() }
 
+/** Display name: the nickname, or "Profile N" for a child without one. */
+export const nameOf = (p: Profile, i: number) => p.name || t('unnamed', { n: i + 1 })
+
 export function switchProfile(id: string) {
   if (!index.list.some((p) => p.id === id)) return
   state = loadState(id)
