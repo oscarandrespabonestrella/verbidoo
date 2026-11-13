@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { STRINGS, TARGET_VARIANTS, langOf, uiLangOf, type StringKey, type TargetLang, type Variant } from '../data/i18n'
 import { MASCOTS } from '../data/mascots'
-import { TARGETS } from '../data/targets'
+import { TARGETS, type VoiceStyle } from '../data/targets'
 import { VERBS, type Verb } from '../data/verbs'
 import { DAY, nextUnlock, pushOutcome, review, startTenses, type Learner, type VerbProgress } from './adaptive'
 import type { Kind } from './games'
@@ -13,9 +13,12 @@ import {
 export const DAILY_GOAL = 50
 export type { VerbProgress }
 
-/** Per-profile settings. Privacy-first defaults: automatic voice checking (audio leaves the device) is off. */
-export interface Controls { voiceCheck: boolean; recording: boolean; newPerDay: number }
-export const DEFAULT_CONTROLS: Controls = { voiceCheck: false, recording: true, newPerDay: 5 }
+/**
+ * Per-profile settings. Privacy-first defaults: automatic voice checking (audio leaves the device) is off.
+ * `voice`: which recordings the learning language plays (natural = Azure, classic = Piper; docs/AUDIO.md).
+ */
+export interface Controls { voiceCheck: boolean; recording: boolean; newPerDay: number; voice: VoiceStyle }
+export const DEFAULT_CONTROLS: Controls = { voiceCheck: false, recording: true, newPerDay: 5, voice: 'natural' }
 
 export interface State {
   native: Variant | null; target: Variant | null
@@ -124,6 +127,8 @@ function set(next: Partial<State>) {
 export const useProgress = () => useSyncExternalStore(subscribe, () => state)
 export const useProfiles = () => useSyncExternalStore(subscribe, () => index)
 export const activeProfileId = () => index.active
+/** Recorded voice the active child hears in the learning language. */
+export const activeVoice = (): VoiceStyle => state.controls.voice
 const saveIndex = (i: Index, isChange = true) => { index = i; write(INDEX_KEY, JSON.stringify(i)); if (isChange) changed(); else notify() }
 
 /** Display name: the nickname, or "Profile N" for a child without one. */

@@ -19,7 +19,7 @@ const doc = (s: Partial<State>): State => ({
   native: 'es-ES', target: 'fr-FR', xp: 0, streak: 0, bestStreak: 0, lastDay: '', todayXp: 0, verbs: {}, stats: {}, unlocked: {},
   newToday: { day: '', ids: [] }, badges: [], xpBy: {}, badgesBy: {}, variantBy: {}, daily: { day: '', answers: 0, right: 0, row: 0, bestRow: 0, kindCounts: {}, spoken: 0, activeMs: 0, lastAt: 0, missions: [] },
   weekly: { week: '', xp: 0, days: [], missions: 0, done: false }, history: {}, missionsTotal: 0, weeklyWins: 0, character: 'owl',
-  controls: { voiceCheck: false, recording: true, newPerDay: 5 }, updatedAt: 0, epoch: 0, ...s,
+  controls: { voiceCheck: false, recording: true, newPerDay: 5, voice: 'natural' }, updatedAt: 0, epoch: 0, ...s,
 })
 
 describe('mergeStates', () => {
@@ -36,10 +36,11 @@ describe('mergeStates', () => {
   })
 
   test('settings and languages follow the most recently changed device', () => {
-    const old = doc({ updatedAt: 1, controls: { voiceCheck: false, recording: true, newPerDay: 5 }, character: 'owl' })
-    const recent = doc({ updatedAt: 9, controls: { voiceCheck: false, recording: false, newPerDay: 3 }, character: 'fox' })
+    const old = doc({ updatedAt: 1, controls: { voiceCheck: false, recording: true, newPerDay: 5, voice: 'natural' }, character: 'owl' })
+    const recent = doc({ updatedAt: 9, controls: { voiceCheck: false, recording: false, newPerDay: 3, voice: 'classic' }, character: 'fox' })
     for (const m of [mergeStates(old, recent), mergeStates(recent, old)]) {
       expect(m.controls.newPerDay).toBe(3)
+      expect(m.controls.voice).toBe('classic')
       expect(m.character).toBe('fox')
       expect(m.updatedAt).toBe(9)
     }
