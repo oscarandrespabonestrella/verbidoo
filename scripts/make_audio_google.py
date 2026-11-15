@@ -14,6 +14,7 @@ Default pace follows Google's per-project quotas: 200 requests per minute for Ch
 for everything), 1,000 for the others such as Neural2 and WaveNet (about 30 minutes).
 """
 import argparse
+import array
 import base64
 import io
 import json
@@ -22,7 +23,7 @@ import sys
 import urllib.request
 import wave
 
-from natural_audio import VARIANTS, record, retrying
+from natural_audio import VARIANTS, NoAudio, record, retrying
 
 API = "https://texttospeech.googleapis.com/v1"
 BITRATE = 48  # kbps mono, like the Azure clips
@@ -55,6 +56,21 @@ def voices(key: str, variant: str) -> list[str]:
                   if variant in v.get("languageCodes", []))
 
 
+def is_silent(wav_bytes: bytes) -> bool:
+    """Chirp 3 HD sometimes returns a clip with no voice at all (fr-FR "dire." did)."""
+    with wave.open(io.BytesIO(wav_bytes)) as w:
+        pcm = array.array("h", w.readframes(w.getnframes()))
+    return not pcm or max(abs(min(pcm)), max(pcm)) < 2000  # 16-bit peak; near-mute takes stay under 1,100, speech peaks around 10,000+
+
+
+def spoken_forms(text: str) -> list[str]:
+    """What to send, in order, until one is not silent. A bare word ("dire", "pouvoir") can come out clipped,
+    garbled or silent; a closing period makes it a complete utterance. The clip name still comes from `text`."""
+    if " " in text or not text[-1:].isalpha():
+        return [text, text]
+    return [text + ".", text[0].upper() + text[1:] + ".", text + " !", text]
+
+
 def to_mp3(wav_bytes: bytes) -> bytes:
     with wave.open(io.BytesIO(wav_bytes)) as w:
         rate, pcm = w.getframerate(), w.readframes(w.getnframes())
@@ -73,6 +89,7 @@ def main() -> None:
     ap.add_argument("--rate", type=float, help="requests per minute (default: 180 for Chirp 3 HD, 900 otherwise)")
     ap.add_argument("--workers", type=int, default=8, help="requests in flight (default 8)")
     ap.add_argument("--limit", type=int, help="record at most this many new clips (for a sample)")
+    ap.add_argument("--redo", help="comma-separated phrases to record again, e.g. \"dire,pouvoir\" (exact text)")
     ap.add_argument("--list-voices", metavar="VARIANT", help="print Google's voices for a variant and stop")
     args = ap.parse_args()
 
@@ -100,14 +117,20 @@ def main() -> None:
         rate = args.rate or (180 if "Chirp3-HD" in voice else 900)
 
         def synth(text: str, voice=voice, variant=variant) -> bytes:
-            res = request(key, "text:synthesize", {
-                "input": {"text": text},
-                "voice": {"languageCode": variant, "name": voice},
-                "audioConfig": {"audioEncoding": "LINEAR16", "sampleRateHertz": RATE_HZ},
-            })
-            return to_mp3(base64.b64decode(res["audioContent"]))
+            for spoken in spoken_forms(text):
+                res = request(key, "text:synthesize", {
+                    "input": {"text": spoken},
+                    "voice": {"languageCode": variant, "name": voice},
+                    "audioConfig": {"audioEncoding": "LINEAR16", "sampleRateHertz": RATE_HZ},
+                })
+                wav = base64.b64decode(res["audioContent"])
+                if not is_silent(wav):
+                    return to_mp3(wav)
+                print(f"    {variant} {spoken!r} came back silent, trying again")
+            raise NoAudio(text)
 
-        record(variant, "google", voice, synth, rate, args.workers, args.limit)
+        record(variant, "google", voice, synth, rate, args.workers, args.limit,
+               [t.strip() for t in args.redo.split(",")] if args.redo else None)
 
 
 if __name__ == "__main__":

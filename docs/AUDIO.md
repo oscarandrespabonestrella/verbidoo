@@ -67,6 +67,8 @@ python scripts/make_audio_azure.py --dir all                          # free F0 
 python scripts/make_audio_azure.py --dir all --rate 1500 --workers 16 # Standard S0 tier
 ```
 
+To re-record clips that came out wrong, name them with `--redo` (exact phrase text, comma-separated), for example `python scripts/make_audio_google.py --dir fr-FR --redo "dire,pouvoir,devoir"`. Listen and repeat if needed; each run gives a slightly different take. The Google recorder sends single words with a closing period, because Chirp 3 HD can clip or garble a bare word.
+
 Change a variant's voice with `--voice` (or `VOICES` in the script), after deleting that folder's `*.mp3`.
 
 **Cost and time** for a full recording (~29,200 phrases, ~477,000 characters over the four variants):

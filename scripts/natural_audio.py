@@ -31,10 +31,17 @@ class Pace:
 
 
 def record(variant: str, service: str, voice: str, synth: Callable[[str], bytes],
-           per_minute: float, workers: int, limit: int | None) -> None:
+           per_minute: float, workers: int, limit: int | None, redo: list[str] | None = None) -> None:
     out = NATURAL / variant
     phrases = json.loads((out / "phrases.json").read_text(encoding="utf-8"))
     wanted = {p["f"] for p in phrases}
+    if redo:  # delete these phrases' clips so they are recorded again below
+        texts = {p["t"]: p["f"] for p in phrases}
+        unknown = [t for t in redo if t not in texts]
+        if unknown:
+            raise SystemExit(f"{variant}: not in phrases.json: {', '.join(unknown)} (use the exact text)")
+        for t in redo:
+            (out / texts[t]).unlink(missing_ok=True)
     stale = [f for f in out.glob("*.mp3") if f.name not in wanted]
     for f in stale:
         f.unlink()
@@ -58,9 +65,15 @@ def record(variant: str, service: str, voice: str, synth: Callable[[str], bytes]
 
     pace = Pace(per_minute)
 
+    skipped: list[str] = []
+
     def one(p: dict) -> None:
         pace.wait()
-        audio = synth(p["t"])
+        try:
+            audio = synth(p["t"])
+        except NoAudio:
+            skipped.append(p["t"])  # left unrecorded: the app plays the classic clip instead
+            return
         tmp = out / (p["f"] + ".part")
         tmp.write_bytes(audio)
         tmp.replace(out / p["f"])
@@ -80,6 +93,13 @@ def record(variant: str, service: str, voice: str, synth: Callable[[str], bytes]
             raise
     size = sum(f.stat().st_size for f in out.glob("*.mp3"))
     print(f"done: {len(list(out.glob('*.mp3')))}/{len(wanted)} clips, {size / 1e6:.1f} MB")
+    if skipped:
+        print(f"  no voice from the service for {len(skipped)} (the classic voice plays these): "
+              f"{', '.join(sorted(skipped))}")
+
+
+class NoAudio(Exception):
+    """The service only returned silence for a phrase; it is skipped rather than saved as a mute clip."""
 
 
 def retrying(call: Callable[[], bytes], fatal: Callable[[int], str | None]) -> bytes:
