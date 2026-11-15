@@ -15,7 +15,7 @@ export type { VerbProgress }
 
 /**
  * Per-profile settings. Privacy-first defaults: automatic voice checking (audio leaves the device) is off.
- * `voice`: which recordings the learning language plays (natural = Azure, classic = Piper; docs/AUDIO.md).
+ * `voice`: which recordings the learning language plays (natural = cloud neural voices, classic = Piper; docs/AUDIO.md).
  */
 export interface Controls { voiceCheck: boolean; recording: boolean; newPerDay: number; voice: VoiceStyle }
 export const DEFAULT_CONTROLS: Controls = { voiceCheck: false, recording: true, newPerDay: 5, voice: 'natural' }

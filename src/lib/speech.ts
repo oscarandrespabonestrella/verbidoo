@@ -29,7 +29,7 @@ export function voiceFor(variant: Variant) {
 export interface SpeakOpts { rate?: number; voice?: VoiceStyle; onWord?: (charIndex: number) => void; onEnd?: () => void }
 let last: { parts: string[]; variant: Variant; opts: SpeakOpts } | null = null
 
-// ── Recorded learning languages: Azure neural ("natural") or open-source Piper ("classic") — see docs/AUDIO.md ──
+// ── Recorded learning languages: cloud neural ("natural") or open-source Piper ("classic") — see docs/AUDIO.md ──
 const audioOf = (variant: Variant) => TARGETS[langOf(variant) as TargetLang]?.audio
 /**
  * Recording folders to try for a variant, best first: the chosen voice, then Piper. A natural clip that is missing

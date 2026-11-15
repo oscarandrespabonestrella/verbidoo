@@ -30,7 +30,7 @@ export function clipName(text: string) {
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36)
 }
 
-/** Recording folder → the variants it speaks for (fr → fr-FR + fr-CA, azure/fr-CA → fr-CA), for every voice. */
+/** Recording folder → the variants it speaks for (fr → fr-FR + fr-CA, natural/fr-CA → fr-CA), for every voice. */
 export const AUDIO_DIRS: Record<string, Variant[]> = {}
 for (const c of Object.values(TARGETS)) for (const dirs of Object.values(c.audio))
   for (const [v, dir] of Object.entries(dirs)) (AUDIO_DIRS[dir] ??= []).push(v as Variant)

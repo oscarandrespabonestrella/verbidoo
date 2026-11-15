@@ -18,7 +18,7 @@ Everything that changes with the language being learned is configuration, not co
 | Lemmas (only irregular data), example sentences, regional wording | `src/data/<lang>.ts`, joined to the shared concepts in `src/data/verbs.ts` |
 | Conjugation | `src/engine/<lang>.ts`, dispatched from `src/engine/conjugate.ts` |
 | Home backdrop | a scene component in `src/components/mascot.tsx` (`SCENES`) |
-| Audio | `npm run audio:list` + `scripts/make_audio.py --dir` (Piper, "classic") / `scripts/make_audio_azure.py --dir` (Azure, "natural") (docs/AUDIO.md) |
+| Audio | `npm run audio:list` + `scripts/make_audio.py --dir` (Piper, "classic") / `scripts/make_audio_google.py` / `make_audio_azure.py --dir` (cloud, "natural") (docs/AUDIO.md) |
 
 Progress is kept per learning language: verbs, stats and unlocked tenses are keyed by language; XP and badges of the other languages wait in `xpBy` / `badgesBy` and are swapped in by `setLanguages`. Streak, missions and the parent report stay per child.
 

@@ -10,3 +10,4 @@ voice-samples/
 # Local Netlify folder
 .netlify
 *.tsbuildinfo
+__pycache__/

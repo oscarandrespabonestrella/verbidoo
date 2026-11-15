@@ -1,9 +1,14 @@
 import { langOf, type Lang, type TargetLang, type Variant } from './i18n'
 import type { MascotId } from './mascots'
 
-/** Recorded voices for the learning languages: open-source Piper ("classic") or Azure neural voices ("natural"). */
+/** Recorded voices for the learning languages: open-source Piper ("classic") or cloud neural voices ("natural"). */
 export type VoiceStyle = 'classic' | 'natural'
 export const VOICE_STYLES: VoiceStyle[] = ['natural', 'classic']
+/**
+ * The cloud service that recorded public/audio/natural (scripts/make_audio_azure.py or make_audio_google.py;
+ * each folder's voice.json says which). Only used for the credit line in Settings: keep it in step.
+ */
+export const NATURAL_SERVICE: 'azure' | 'google' = 'google'
 
 /**
  * Everything that changes with the language being learned. Adding a language = an entry here,
@@ -35,7 +40,7 @@ export const TARGETS: Record<TargetLang, TargetConfig> = {
     travel: { near: 'proche', also: { past: ['imp', 'pqp'], future: ['proche', 'fut', 'futant'], now: ['prog'] }, wrong: ['pres', 'pc', 'proche', 'fut', 'imp', 'cond'] },
     audio: {
       classic: { 'fr-FR': 'fr', 'fr-CA': 'fr' },
-      natural: { 'fr-FR': 'azure/fr-FR', 'fr-CA': 'azure/fr-CA' },
+      natural: { 'fr-FR': 'natural/fr-FR', 'fr-CA': 'natural/fr-CA' },
     },
   },
   nl: {
@@ -47,7 +52,7 @@ export const TARGETS: Record<TargetLang, TargetConfig> = {
     travel: { near: 'gaan', also: { past: ['ovt', 'vvt'], future: ['gaan', 'ottt', 'vttt'], now: ['prog'] }, wrong: ['ott', 'vtt', 'gaan', 'ottt', 'ovt', 'ovtt'] },
     audio: {
       classic: { 'nl-NL': 'nl-NL', 'nl-BE': 'nl-BE' },
-      natural: { 'nl-NL': 'azure/nl-NL', 'nl-BE': 'azure/nl-BE' },
+      natural: { 'nl-NL': 'natural/nl-NL', 'nl-BE': 'natural/nl-BE' },
     },
   },
 }

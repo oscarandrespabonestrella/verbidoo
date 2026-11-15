@@ -5,7 +5,7 @@ import { ProfileForm, freeAvatar } from '../components/ProfileForm'
 import { Avatar, Card, ProgressBar, SyncButton } from '../components/ui'
 import { CATEGORIES, type StringKey } from '../data/i18n'
 import { VERBS } from '../data/verbs'
-import { VOICE_STYLES } from '../data/targets'
+import { NATURAL_SERVICE, VOICE_STYLES } from '../data/targets'
 import { infinitive, sentenceFor } from '../engine/conjugate'
 import { plain } from '../lib/phrases'
 import { speak } from '../lib/speech'
@@ -18,7 +18,11 @@ import {
 } from '../lib/progress'
 import { weekOf } from '../lib/rewards'
 
-const KINDS: Kind[] = ['picture', 'listen', 'conjugate', 'complete', 'timetravel', 'translate', 'build', 'pronounce']
+const NATURAL_CREDIT = {
+  azure: { name: 'Microsoft Azure AI Speech', url: 'https://learn.microsoft.com/azure/ai-services/speech-service/text-to-speech' },
+  google: { name: 'Google Cloud Text-to-Speech', url: 'https://cloud.google.com/text-to-speech' },
+}
+const KINDS: Kind[] =['picture', 'listen', 'conjugate', 'complete', 'timetravel', 'translate', 'build', 'pronounce']
 const DAY = 86_400_000
 
 const H2 = ({ icon, children, extra }: { icon?: IconName; children: ReactNode; extra?: ReactNode }) => (
@@ -378,8 +382,8 @@ export function Settings() {
             <a className="underline" href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noreferrer">CC0</a>
           </p>
           <p className="mut m-0 text-xs leading-relaxed">
-            {t('creditsVoiceAzure')}{' '}
-            <a className="underline" href="https://learn.microsoft.com/azure/ai-services/speech-service/text-to-speech" target="_blank" rel="noreferrer">Azure AI Speech</a>
+            {t('creditsVoiceNatural', { s: NATURAL_CREDIT[NATURAL_SERVICE].name })}{' '}
+            <a className="underline" href={NATURAL_CREDIT[NATURAL_SERVICE].url} target="_blank" rel="noreferrer">{NATURAL_CREDIT[NATURAL_SERVICE].name}</a>
           </p>
         </Card>
       </>}
