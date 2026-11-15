@@ -35,6 +35,7 @@ def main() -> None:
     ap.add_argument("--rate", type=float, default=18, help="requests per minute (default 18: under the free tier's 20)")
     ap.add_argument("--workers", type=int, default=1, help="requests in flight (default 1; 16 on S0)")
     ap.add_argument("--limit", type=int, help="record at most this many new clips (for a sample)")
+    ap.add_argument("--redo", help="comma-separated phrases to record again, e.g. \"dire,pouvoir\" (exact text)")
     args = ap.parse_args()
 
     key, region = os.environ.get("AZURE_SPEECH_KEY"), os.environ.get("AZURE_SPEECH_REGION")
@@ -63,7 +64,8 @@ def main() -> None:
                     return res.read()
             return retrying(call, fatal)
 
-        record(variant, "azure", voice, synth, args.rate, args.workers, args.limit)
+        record(variant, "azure", voice, synth, args.rate, args.workers, args.limit,
+               [t.strip() for t in args.redo.split(",")] if args.redo else None)
 
 
 if __name__ == "__main__":
