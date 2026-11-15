@@ -1,7 +1,8 @@
 import { useSyncExternalStore } from 'react'
 import { VARIANTS, langOf, type TargetLang, type Variant } from '../data/i18n'
-import { TARGETS } from '../data/targets'
+import { TARGETS, type VoiceStyle } from '../data/targets'
 import { clipName } from './phrases'
+import { activeVoice } from './progress'
 
 export const speechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window
 
@@ -24,14 +25,23 @@ export function voiceFor(variant: Variant) {
   return { voice: v, exact: false }
 }
 
-export interface SpeakOpts { rate?: number; onWord?: (charIndex: number) => void; onEnd?: () => void }
+/** `voice`: play this recorded voice instead of the active child's choice (the "Listen" button in settings). */
+export interface SpeakOpts { rate?: number; voice?: VoiceStyle; onWord?: (charIndex: number) => void; onEnd?: () => void }
 let last: { parts: string[]; variant: Variant; opts: SpeakOpts } | null = null
 
-// ── Recorded learning languages (open-source Piper voices — see docs/AUDIO.md) ──
-/** Recording folder for a variant (public/audio/fr, public/audio/nl-NL…), if it has one. */
-const clipDir = (variant: Variant) => TARGETS[langOf(variant) as TargetLang]?.audio[variant]
+// ── Recorded learning languages: cloud neural ("natural") or open-source Piper ("classic") — see docs/AUDIO.md ──
+const audioOf = (variant: Variant) => TARGETS[langOf(variant) as TargetLang]?.audio
+/**
+ * Recording folders to try for a variant, best first: the chosen voice, then Piper. A natural clip that is missing
+ * (not recorded yet) falls back to the classic one; classic never falls forward, so choosing it is a firm choice.
+ */
+export function clipDirs(variant: Variant, voice: VoiceStyle = activeVoice()): string[] {
+  const a = audioOf(variant)
+  if (!a) return []
+  return [...new Set([a[voice]?.[variant], a.classic[variant]].filter((d): d is string => !!d))]
+}
 /** Learning languages have recordings of every phrase the app says, so they never depend on the device's voices. */
-export const hasRecordings = (variant: Variant) => !!clipDir(variant)
+export const hasRecordings = (variant: Variant) => clipDirs(variant, 'classic').length > 0
 export const canSpeak = (variant: Variant) => hasRecordings(variant) || speechSupported
 
 let token = 0                              // bumped by every new speak() — older playback stops itself
@@ -45,9 +55,9 @@ function stopAll() {
 }
 
 /** Plays one recording; resolves false if it is missing or can't play (the caller then falls back). */
-function playClip(text: string, variant: Variant, rate: number, onWord?: (i: number) => void) {
+function playClip(text: string, dir: string, rate: number, onWord?: (i: number) => void) {
   return new Promise<boolean>((resolve) => {
-    const a = new Audio(`${import.meta.env.BASE_URL}audio/${clipDir(variant)}/${clipName(text)}.mp3`)
+    const a = new Audio(`${import.meta.env.BASE_URL}audio/${dir}/${clipName(text)}.mp3`)
     a.playbackRate = rate
     a.preservesPitch = true // slow mode keeps the natural pitch
     let raf = 0
@@ -63,10 +73,15 @@ function playClip(text: string, variant: Variant, rate: number, onWord?: (i: num
 }
 async function playRecorded(parts: string[], variant: Variant, opts: SpeakOpts, my: number) {
   const rate = (opts.rate ?? 0.9) / 0.9 // browser-voice rates are tuned around 0.9; recordings play at 1
+  const dirs = clipDirs(variant, opts.voice)
   for (let i = 0; i < parts.length; i++) {
-    const ok = await playClip(parts[i], variant, rate, opts.onWord)
-    if (my !== token) return opts.onEnd?.() // interrupted by a newer speak()
-    if (!ok) return synthesize(parts.slice(i), variant, opts) // missing clip: browser voice, if the device has one
+    let ok = false
+    for (const dir of dirs) {
+      ok = await playClip(parts[i], dir, rate, opts.onWord)
+      if (my !== token) return opts.onEnd?.() // interrupted by a newer speak()
+      if (ok) break // otherwise: not recorded in this voice, try the next folder
+    }
+    if (!ok) return synthesize(parts.slice(i), variant, opts) // no recording at all: browser voice, if the device has one
   }
   opts.onEnd?.()
 }

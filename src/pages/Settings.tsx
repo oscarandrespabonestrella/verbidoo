@@ -5,7 +5,10 @@ import { ProfileForm, freeAvatar } from '../components/ProfileForm'
 import { Avatar, Card, ProgressBar, SyncButton } from '../components/ui'
 import { CATEGORIES, type StringKey } from '../data/i18n'
 import { VERBS } from '../data/verbs'
-import { infinitive } from '../engine/conjugate'
+import { NATURAL_SERVICE, VOICE_STYLES } from '../data/targets'
+import { infinitive, sentenceFor } from '../engine/conjugate'
+import { plain } from '../lib/phrases'
+import { speak } from '../lib/speech'
 import { accuracy, trickyVerbs } from '../lib/adaptive'
 import { cloudConfigured, deleteAccount, resetPassword, setNewPassword, signIn, signOut, signUp, useCloud } from '../lib/cloud'
 import type { Kind } from '../lib/games'
@@ -15,7 +18,11 @@ import {
 } from '../lib/progress'
 import { weekOf } from '../lib/rewards'
 
-const KINDS: Kind[] = ['picture', 'listen', 'conjugate', 'complete', 'timetravel', 'translate', 'build', 'pronounce']
+const NATURAL_CREDIT = {
+  azure: { name: 'Microsoft Azure AI Speech', url: 'https://learn.microsoft.com/azure/ai-services/speech-service/text-to-speech' },
+  google: { name: 'Google Cloud Text-to-Speech', url: 'https://cloud.google.com/text-to-speech' },
+}
+const KINDS: Kind[] =['picture', 'listen', 'conjugate', 'complete', 'timetravel', 'translate', 'build', 'pronounce']
 const DAY = 86_400_000
 
 const H2 = ({ icon, children, extra }: { icon?: IconName; children: ReactNode; extra?: ReactNode }) => (
@@ -136,6 +143,31 @@ function Switch({ on, label, onChange }: { on: boolean; label: string; onChange:
   )
 }
 
+/** Natural (Azure) or classic (Piper) recordings for this child's learning language, with a sample to compare. */
+function VoicePicker({ id, s }: { id: string; s: State }) {
+  const voice = s.controls.voice
+  const sample = s.target ? plain(sentenceFor(VERBS[0], 0, s.target)) : null
+  return (
+    <div className="flex flex-col gap-2.5">
+      <div><b className="text-[15px]">{t('ctlVoice')}</b><p className="mut m-0 mt-1 text-sm leading-relaxed">{t('ctlVoiceDesc')}</p></div>
+      <div className="flex flex-wrap items-center gap-2">
+        <div role="radiogroup" aria-label={t('ctlVoice')} className="flex gap-1 rounded-[14px] bg-soft p-1">
+          {VOICE_STYLES.map((v) => (
+            <button key={v} type="button" role="radio" aria-checked={voice === v} onClick={() => setControls(id, { voice: v })}
+              className={`min-h-11 rounded-[10px] px-4 text-[15px] font-extrabold ${voice === v ? 'bg-white text-ink shadow-[0_1px_3px_rgba(36,48,94,.12)]' : 'text-muted'}`}>
+              {t(v === 'natural' ? 'voiceNatural' : 'voiceClassic')}
+            </button>
+          ))}
+        </div>
+        {sample && s.target && (
+          <button type="button" onClick={() => speak(sample, s.target!, { voice })}
+            className="btn btn-ghost min-h-11 !w-auto px-4"><Icon name="speaker" />{t('voiceTry')}</button>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function Rules({ id, s }: { id: string; s: State }) {
   const c = s.controls
   const Toggle = ({ k, label, desc }: { k: 'voiceCheck' | 'recording'; label: string; desc: string }) => (
@@ -159,6 +191,8 @@ function Rules({ id, s }: { id: string; s: State }) {
             className="size-11 rounded-[10px] bg-white text-xl font-extrabold disabled:opacity-40">+</button>
         </div>
       </div>
+      <div className="h-px bg-line" />
+      <VoicePicker id={id} s={s} />
       <div className="h-px bg-line" />
       <Toggle k="recording" label={t('ctlRecording')} desc={t('ctlRecordingDesc')} />
       <Toggle k="voiceCheck" label={t('ctlVoiceCheck')} desc={t('ctlVoiceCheckDesc')} />
@@ -346,6 +380,10 @@ export function Settings() {
             <a className="underline" href="https://huggingface.co/rhasspy/piper-voices/tree/main/nl/nl_NL/pim" target="_blank" rel="noreferrer">pim</a> ·{' '}
             <a className="underline" href="https://huggingface.co/rhasspy/piper-voices/tree/main/nl/nl_BE/rdh" target="_blank" rel="noreferrer">rdh</a> ·{' '}
             <a className="underline" href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noreferrer">CC0</a>
+          </p>
+          <p className="mut m-0 text-xs leading-relaxed">
+            {t('creditsVoiceNatural', { s: NATURAL_CREDIT[NATURAL_SERVICE].name })}{' '}
+            <a className="underline" href={NATURAL_CREDIT[NATURAL_SERVICE].url} target="_blank" rel="noreferrer">{NATURAL_CREDIT[NATURAL_SERVICE].name}</a>
           </p>
         </Card>
       </>}

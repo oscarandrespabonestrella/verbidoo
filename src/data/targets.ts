@@ -1,6 +1,15 @@
 import { langOf, type Lang, type TargetLang, type Variant } from './i18n'
 import type { MascotId } from './mascots'
 
+/** Recorded voices for the learning languages: open-source Piper ("classic") or cloud neural voices ("natural"). */
+export type VoiceStyle = 'classic' | 'natural'
+export const VOICE_STYLES: VoiceStyle[] = ['natural', 'classic']
+/**
+ * The cloud service that recorded public/audio/natural (scripts/make_audio_azure.py or make_audio_google.py;
+ * each folder's voice.json says which). Only used for the credit line in Settings: keep it in step.
+ */
+export const NATURAL_SERVICE: 'azure' | 'google' = 'google'
+
 /**
  * Everything that changes with the language being learned. Adding a language = an entry here,
  * its lemmas in data/<lang>.ts, an engine section, its mascot in data/mascots.ts and its recordings.
@@ -17,8 +26,8 @@ export interface TargetConfig {
   compare: { now: string; past: string; future: string }
   /** Time Travel: the near future, other right answers per cue (never offered as distractors), and the distractor pool. */
   travel: { near: string; also: { past: string[]; future: string[]; now: string[] }; wrong: string[] }
-  /** Folder under public/audio with recordings for each variant. */
-  audio: Partial<Record<Variant, string>>
+  /** Folder under public/audio with recordings for each variant, per voice (see docs/AUDIO.md). */
+  audio: Record<VoiceStyle, Partial<Record<Variant, string>>>
 }
 
 export const TARGETS: Record<TargetLang, TargetConfig> = {
@@ -29,7 +38,10 @@ export const TARGETS: Record<TargetLang, TargetConfig> = {
     tensePath: ['pres', 'proche', 'pc', 'imper', 'prog', 'imp', 'fut', 'impneg', 'cond', 'subj', 'pqp', 'futant', 'condp', 'subjp'],
     compare: { now: 'pres', past: 'pc', future: 'fut' },
     travel: { near: 'proche', also: { past: ['imp', 'pqp'], future: ['proche', 'fut', 'futant'], now: ['prog'] }, wrong: ['pres', 'pc', 'proche', 'fut', 'imp', 'cond'] },
-    audio: { 'fr-FR': 'fr', 'fr-CA': 'fr' },
+    audio: {
+      classic: { 'fr-FR': 'fr', 'fr-CA': 'fr' },
+      natural: { 'fr-FR': 'natural/fr-FR', 'fr-CA': 'natural/fr-CA' },
+    },
   },
   nl: {
     lang: 'nl', flag: '🇳🇱', variants: ['nl-NL', 'nl-BE'], mascot: 'ollie',
@@ -38,7 +50,10 @@ export const TARGETS: Record<TargetLang, TargetConfig> = {
     tensePath: ['ott', 'gaan', 'vtt', 'imper', 'prog', 'ovt', 'ottt', 'ovtt', 'vvt', 'vttt', 'vvtt'],
     compare: { now: 'ott', past: 'vtt', future: 'ottt' },
     travel: { near: 'gaan', also: { past: ['ovt', 'vvt'], future: ['gaan', 'ottt', 'vttt'], now: ['prog'] }, wrong: ['ott', 'vtt', 'gaan', 'ottt', 'ovt', 'ovtt'] },
-    audio: { 'nl-NL': 'nl-NL', 'nl-BE': 'nl-BE' },
+    audio: {
+      classic: { 'nl-NL': 'nl-NL', 'nl-BE': 'nl-BE' },
+      natural: { 'nl-NL': 'natural/nl-NL', 'nl-BE': 'natural/nl-BE' },
+    },
   },
 }
 export const TARGET_LANGS = Object.keys(TARGETS) as TargetLang[]

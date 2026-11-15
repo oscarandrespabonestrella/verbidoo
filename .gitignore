@@ -5,7 +5,9 @@ scripts/.cache
 .venv-audio/
 voices/
 voice-samples/
+*.mp3.part
 
 # Local Netlify folder
 .netlify
 *.tsbuildinfo
+__pycache__/
