@@ -1,9 +1,9 @@
 import { DUTCH, type NlLemma } from './dutch'
 import { FRENCH, type FrLemma } from './french'
+import { ITALIAN, type ItLemma } from './italian'
+import { MEANING_FR, MEANING_IT } from './meanings'
 import { MORE_VERBS } from './verbs-more'
-import type { Category, UiLang, Variant } from './i18n'
-
-type Text3 = Record<UiLang, string>
+import type { Category, Text3, UiLang, Variant } from './i18n'
 
 /** English principal parts. `third` only when it breaks the -s/-es/-ies rule. */
 /**
@@ -31,12 +31,15 @@ export type Sentence = [string, string, string, string?]
 
 export interface Verb {
   id: string; emoji: string; cat: Category
-  en: EnLemma; es: RomLemma; pt: RomLemma; fr: FrLemma; nl: NlLemma
-  mean: Text3
+  en: EnLemma; es: RomLemma; pt: RomLemma; fr: FrLemma; nl: NlLemma; it: ItLemma
+  mean: Record<UiLang, string>
   ex: [Sentence, Sentence] // [easy present, past]
 }
 
-const BASE: Omit<Verb, 'fr' | 'nl'>[] = [
+/** What verbs.ts / verbs-more.ts write by hand: French, Dutch, Italian and the fr/it meanings are added in VERBS. */
+export type BaseVerb = Omit<Verb, 'fr' | 'nl' | 'it' | 'mean'> & { mean: Text3 }
+
+const BASE: BaseVerb[] = [
   {
     id: 'eat', emoji: '🍎', cat: 'food',
     en: { inf: 'eat', past: 'ate', pp: 'eaten', ing: 'eating' },
@@ -390,7 +393,9 @@ const BASE: Omit<Verb, 'fr' | 'nl'>[] = [
   },
 ]
 
-/** French and Dutch are the languages being learned; en/es/pt are the languages the child already speaks. */
-export const VERBS: Verb[] = [...BASE, ...MORE_VERBS].map((v) => ({ ...v, fr: FRENCH[v.id], nl: DUTCH[v.id] }))
+/** French and Dutch can be learned; en/es/pt/it (and French, for a child who already speaks it) are the languages the child already knows. */
+export const VERBS: Verb[] = [...BASE, ...MORE_VERBS].map((v) => ({
+  ...v, fr: FRENCH[v.id], nl: DUTCH[v.id], it: ITALIAN[v.id], mean: { ...v.mean, fr: MEANING_FR[v.id], it: MEANING_IT[v.id] },
+}))
 
 export const verbById = (id: string) => VERBS.find((v) => v.id === id)

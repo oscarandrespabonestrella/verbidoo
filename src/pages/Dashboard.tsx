@@ -13,7 +13,7 @@ import { CATEGORIES, langOf } from "../data/i18n";
 import { VERBS } from "../data/verbs";
 import { conjugate, infinitive } from "../engine/conjugate";
 import { recommendations, trickyVerbs, type Rec } from "../lib/adaptive";
-import type { Kind } from "../lib/games";
+import { playable, type Kind } from "../lib/games";
 import {
   DAILY_GOAL,
   character,
@@ -324,7 +324,7 @@ export function Dashboard() {
         {/* For you. */}
         <section className="card flex min-w-0 flex-col gap-2.5 px-4 py-[18px] lg:p-5">
           <h2 className="h2 mb-1">{t("forYou")}</h2>
-          {recommendations(L, open, ALL_KINDS).map((r) => {
+          {recommendations(L, open, playable(ALL_KINDS, target, s.native!)).map((r) => {
             const st = REC_STYLE[r.title] ?? REC_STYLE.rec_adventure;
             return (
               <button

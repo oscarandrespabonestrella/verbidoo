@@ -1,4 +1,4 @@
-import type { UiLang } from './i18n'
+import type { Text3 } from './i18n'
 
 /**
  * Dutch lemma. Weak verbs need only `inf`/`syl`/`ipa` (+ `stem` when it isn't the infinitive minus -en);
@@ -17,7 +17,7 @@ export interface NlLemma {
   ipa: string
   stem?: string; pres?: string; past?: string; pp?: string
   aux?: 'zijn'; sep?: string; prep?: string; noGe?: true; refl?: true; noImper?: true; imper?: string; subj?: string
-  note?: Record<UiLang, string>
+  note?: Text3
   ex: [string, string]; exBE?: [string?, string?]
 }
 

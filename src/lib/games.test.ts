@@ -8,7 +8,7 @@ import { makeQ, pronunciationScore, type Kind } from './games'
 const KINDS: Kind[] = ['picture', 'listen', 'conjugate', 'complete', 'timetravel', 'translate', 'build', 'pronounce']
 
 // Randomised generators: run each game many times for every verb and level and check the invariants.
-const TARGETS_UNDER_TEST: [Variant, Variant][] = [['fr-FR', 'es-419'], ['nl-NL', 'pt-BR'], ['nl-BE', 'en-GB']]
+const TARGETS_UNDER_TEST: [Variant, Variant][] = [['fr-FR', 'es-419'], ['nl-NL', 'pt-BR'], ['nl-BE', 'en-GB'], ['fr-CA', 'it-IT'], ['nl-NL', 'fr-FR'], ['fr-FR', 'fr-CA']]
 test.each(KINDS.flatMap((k) => TARGETS_UNDER_TEST.map(([t, n]) => [k, t, n] as const)))('%s questions are well-formed for every verb and level (%s)', (kind, target, native) => {
   for (const verb of VERBS) for (const level of [1, 2, 3]) for (let r = 0; r < 8; r++) {
     const q = makeQ(kind, verb, VERBS, level, target, native)

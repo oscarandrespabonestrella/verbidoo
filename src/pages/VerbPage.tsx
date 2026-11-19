@@ -112,9 +112,11 @@ function Conjugation({ verb, target, native, tab }: { verb: Verb; target: Varian
   const group = tables.filter((x) => x.tense.time === time)
   const pickTime = (x: Time) => { setTime(x); const first = tables.find((tb) => tb.tense.time === x); if (first) setTenseId(first.tense.id) }
 
-  // Compare: French next to English, Spanish and Portuguese (the child's own variant for their language).
+  // Compare: the target next to English, Spanish and Portuguese (the child's own variant for their language),
+  // plus the child's own language when it is French or Italian (unless that is the language being learned).
   const others: Variant[] = [target, ...(['en', 'es', 'pt'] as Lang[]).map((l) =>
-    l === langOf(native) ? native : ({ en: 'en-US', es: 'es-ES', pt: 'pt-BR' } as Record<string, Variant>)[l])]
+    l === langOf(native) ? native : ({ en: 'en-US', es: 'es-ES', pt: 'pt-BR' } as Record<string, Variant>)[l]),
+  ...(['fr', 'it'].includes(langOf(native)) && langOf(native) !== tl ? [native] : [])]
 
   return (
     <>
@@ -203,7 +205,7 @@ function Conjugation({ verb, target, native, tab }: { verb: Verb; target: Varian
           <h2 className="h2">{t('compare')}</h2>
           <span className="cap">{PERSONS[tl][p].label}</span>
         </div>
-        <div className="grid grid-cols-[minmax(52px,auto)_repeat(4,minmax(0,1fr))] gap-1.5 text-[13px] leading-snug sm:text-sm">
+        <div className="grid gap-1.5 text-[13px] leading-snug sm:text-sm" style={{ gridTemplateColumns: `minmax(52px,auto) repeat(${others.length}, minmax(0,1fr))` }}>
           <span />
           {others.map((v) => <span key={v} className="p-0.5 text-center text-xs font-extrabold text-subtle" title={VARIANTS[v].name}>{v.slice(0, 2).toUpperCase()}</span>)}
           {(['now', 'past', 'future'] as const).map((tm) => (
@@ -322,7 +324,7 @@ export function VerbPage({ id }: { id: string }) {
             {note && (
               <div className="flex gap-2.5 rounded-[14px] bg-grape-soft p-3">
                 <Icon name="bulb" className="text-grape" />
-                <p className="m-0 min-w-0 text-[15px] leading-snug">{note[nl]}</p>
+                <p className="m-0 min-w-0 text-[15px] leading-snug">{note[nl] ?? note.en}</p>
               </div>
             )}
           </Card>

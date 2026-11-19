@@ -28,7 +28,7 @@ Progress is kept per learning language: verbs, stats and unlocked tenses are key
 |---|---|
 | Accuracy > quantity | Conjugations come from a small rule engine **plus explicit per-verb irregular data**, checked by tests against reference forms. No bulk-generated content. |
 | Cross-language comparison | Content is modelled by **concept** (`eat`) with one lemma per language, not per-language word lists. Parallel example sentences give translations for free. |
-| Regional variants | A *variant* (`en-US`, `en-GB`, `es-ES`, `es-419`, `pt-BR`, `pt-PT`) controls voice, lemma overrides (pt-PT *saltar* vs pt-BR *pular*), person sets (vosotros only in Spain; *tu*/*vós* marked regional/literary in Brazil) and endings (pt-PT *falámos*). |
+| Regional variants | A *variant* (`en-US`, `en-GB`, `es-ES`, `es-419`, `pt-BR`, `pt-PT`, `fr-FR`, `fr-CA`, `it-IT`; French and Italian are base languages added later: UI in `i18n-fr.ts` / `i18n-it.ts`, Italian lemmas in `data/italian.ts` + `engine/italian.ts`, French/Italian meanings and notes in `meanings.ts` / `notes-extra.ts`; a French-speaking child reuses the French lemmas and engine, and the translate/build games are skipped when base and target language coincide) controls voice, lemma overrides (pt-PT *saltar* vs pt-BR *pular*), person sets (vosotros only in Spain; *tu*/*vós* marked regional/literary in Brazil) and endings (pt-PT *falámos*). |
 | Children & privacy | No account needed. Progress lives on-device (localStorage). No ads, trackers, chat or uploads. |
 | Add languages without rebuild (long-term) | Content and engine rules are data, not UI. Phase 2 moves content to Postgres (schema below) so new languages are rows, not deploys. |
 

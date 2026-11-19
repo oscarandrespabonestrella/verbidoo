@@ -1,15 +1,20 @@
+import { FR } from './i18n-fr'
+import { IT } from './i18n-it'
+
 /** Languages the learner already speaks (interface + translations). */
-export type UiLang = 'en' | 'es' | 'pt'
+export type UiLang = 'en' | 'es' | 'pt' | 'fr' | 'it'
 /** Languages that can be learned (see data/targets.ts). */
 export type TargetLang = 'fr' | 'nl'
 /** All languages: the ones the learner speaks plus the ones they can learn. */
 export type Lang = UiLang | TargetLang
-export type Variant = 'en-US' | 'en-GB' | 'es-ES' | 'es-419' | 'pt-BR' | 'pt-PT' | 'fr-FR' | 'fr-CA' | 'nl-NL' | 'nl-BE'
+/** Text written for the three original base languages; French and Italian versions live in notes-extra.ts / meanings.ts. */
+export type Text3 = Record<'en' | 'es' | 'pt', string>
+export type Variant = 'en-US' | 'en-GB' | 'es-ES' | 'es-419' | 'pt-BR' | 'pt-PT' | 'it-IT' | 'fr-FR' | 'fr-CA' | 'nl-NL' | 'nl-BE'
 export type Usage = 'regional' | 'literary' | 'formal'
 
 export const langOf = (v: Variant) => v.slice(0, 2) as Lang
 export const uiLangOf = (v: Variant) => v.slice(0, 2) as UiLang
-export const NATIVE_VARIANTS: Variant[] = ['en-US', 'en-GB', 'es-ES', 'es-419', 'pt-BR', 'pt-PT']
+export const NATIVE_VARIANTS: Variant[] = ['en-US', 'en-GB', 'es-ES', 'es-419', 'pt-BR', 'pt-PT', 'fr-FR', 'fr-CA', 'it-IT']
 export const TARGET_VARIANTS: Variant[] = ['fr-FR', 'fr-CA', 'nl-NL', 'nl-BE']
 
 export const VARIANTS: Record<Variant, { name: string; flag: string; voices: string[] }> = {
@@ -19,6 +24,7 @@ export const VARIANTS: Record<Variant, { name: string; flag: string; voices: str
   'es-419': { name: 'Español (Latinoamérica)', flag: '🇲🇽', voices: ['es-MX', 'es-US', 'es-419', 'es-AR', 'es-CO'] },
   'pt-BR': { name: 'Português (Brasil)', flag: '🇧🇷', voices: ['pt-BR'] },
   'pt-PT': { name: 'Português (Portugal)', flag: '🇵🇹', voices: ['pt-PT'] },
+  'it-IT': { name: 'Italiano (Italia)', flag: '🇮🇹', voices: ['it-IT'] },
   'fr-FR': { name: 'Français (France)', flag: '🇫🇷', voices: ['fr-FR'] },
   'fr-CA': { name: 'Français (Canada)', flag: '🇨🇦', voices: ['fr-CA'] },
   'nl-NL': { name: 'Nederlands (Nederland)', flag: '🇳🇱', voices: ['nl-NL'] },
@@ -38,6 +44,7 @@ export const PERSONS: Record<Lang, PersonDef[]> = {
     { label: 'eu' }, { label: 'tu', usage: { 'pt-BR': 'regional' } }, { label: 'ele/ela/você' }, { label: 'nós' },
     { label: 'vós', usage: { 'pt-BR': 'literary', 'pt-PT': 'literary' } }, { label: 'eles/elas/vocês' },
   ],
+  it: [{ label: 'io' }, { label: 'tu' }, { label: 'lui/lei' }, { label: 'noi' }, { label: 'voi' }, { label: 'loro' }],
   fr: [{ label: 'je' }, { label: 'tu' }, { label: 'il/elle/on' }, { label: 'nous' }, { label: 'vous' }, { label: 'ils/elles' }],
   nl: [{ label: 'ik' }, { label: 'jij/je' }, { label: 'hij/zij/het' }, { label: 'wij/we' }, { label: 'jullie' }, { label: 'zij/ze' }],
 }
@@ -136,7 +143,7 @@ const en = {
   cat_core: 'Most used', cat_daily: 'Daily life', cat_movement: 'Movement', cat_food: 'Food', cat_school: 'School', cat_communication: 'Talking', cat_family: 'Family & home',
   in_title: 'Enjoying your learning journey? Install the app for quicker access to your lessons!', in_install: 'Install app', in_later: 'Maybe later', in_ios: 'On iPhone or iPad: tap Share, then “Add to Home Screen”.',
 }
-type Strings = typeof en
+export type Strings = typeof en
 
 const es: Strings = {
   gm_recommended: 'Recomendado', gm_total: 'en total', gm_correct: 'aciertos', gm_quit: 'Salir del juego', gm_inARow: '{n} seguidas', gm_wordsLeft: 'Faltan {n} palabras',
@@ -307,5 +314,5 @@ const pt: Strings = {
 }
 
 // ponytail: pt UI uses tu-forms (informal, works in both variants); split into pt-BR/pt-PT strings if testers ask.
-export const STRINGS: Record<UiLang, Strings> = { en, es, pt }
+export const STRINGS: Record<UiLang, Strings> = { en, es, pt, fr: FR, it: IT }
 export type StringKey = { [K in keyof Strings]: Strings[K] extends string ? K : never }[keyof Strings]

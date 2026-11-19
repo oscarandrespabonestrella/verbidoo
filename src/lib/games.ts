@@ -41,6 +41,14 @@ const quizPersons = (table: TenseTable, target: Variant) =>
 /** Time words used as cues in Time Travel, in the language being learned (Hier / Gisteren…). */
 export const cueWord = (target: Variant, cue: TimeCue) => targetOf(target).cue[cue]
 
+/**
+ * Games that show the child's own language next to the target (translate, build a sentence). When the two are the same
+ * language (a French speaker practising French) they would give the answer away, so they are left out.
+ */
+export const NEEDS_OTHER_LANGUAGE: Kind[] = ['translate', 'build']
+export const playable = (kinds: Kind[], target: Variant, native: Variant) =>
+  langOf(target) === langOf(native) ? kinds.filter((k) => !NEEDS_OTHER_LANGUAGE.includes(k)) : kinds
+
 export function makeQ(kind: Kind, verb: Verb, pool: Verb[], level: number, target: Variant, native: Variant, o: QOpts = {}): Q {
   const n = level === 1 ? 3 : 4
   // Distractors must look different from the answer in every way a game shows them: picture, French, own language.
