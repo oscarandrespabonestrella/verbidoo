@@ -1,11 +1,11 @@
-import type { Verb } from './verbs'
+import type { BaseVerb } from './verbs'
 
 /**
  * The 30 most frequent French verbs beyond the first 30, in frequency order.
  * Same rules as verbs.ts: only forms that break the patterns are written out. Every Spanish/Portuguese
  * form is checked against Wiktionary by scripts/wiktionary.test.ts.
  */
-export const MORE_VERBS: Omit<Verb, 'fr' | 'nl'>[] = [
+export const MORE_VERBS: BaseVerb[] = [
   {
     id: 'be', emoji: '✨', cat: 'core',
     en: { inf: 'be', past: 'was', pastSix: 'was were was were were were', pp: 'been', ing: 'being', pres: 'am are is are are are' },

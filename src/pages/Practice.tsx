@@ -8,7 +8,7 @@ import { CATEGORIES, PERSONS, VARIANTS, langOf, type Variant } from '../data/i18
 import { VERBS, type Verb } from '../data/verbs'
 import { conjugate, formText, infinitive, pronounFor, type Form, type Tense } from '../engine/conjugate'
 import { buildSession, levelFor, pickKind, tenseWeight, type Learner } from '../lib/adaptive'
-import { makeQ, verbLabel, type Kind, type Q, type TimeCue } from '../lib/games'
+import { makeQ, playable, verbLabel, type Kind, type Q, type TimeCue } from '../lib/games'
 import { markAchievement } from '../lib/install'
 import { answer, awardBadges, learner, liveStreak, openVerbs, praise, t, useProgress, type AnswerResult, type State } from '../lib/progress'
 import { MISSIONS, MISSION_XP, WEEKLY_XP } from '../lib/rewards'
@@ -70,7 +70,7 @@ function Picker() {
       </button>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {GAMES.filter((g) => g.id !== 'mixed').map((g) => (
+        {GAMES.filter((g) => g.id !== 'mixed' && playable([g.id as Kind], s.target!, s.native!).length).map((g) => (
           <button key={g.id} type="button" disabled={NEEDS_VOICE.includes(g.id) && !canSpeak(target)} onClick={() => go(`play/${g.id}`)}
             className="flex min-h-[156px] min-w-0 flex-col gap-1.5 rounded-[20px] p-3.5 text-left text-white shadow-[0_8px_20px_rgba(36,48,94,0.16)] transition hover:-translate-y-0.5 disabled:opacity-40"
             style={{ background: g.color }}>
@@ -114,7 +114,7 @@ export function Practice({ game, focus }: { game?: string; focus?: string }) {
   // Session plan, fixed at start: due reviews → tricky verbs → a few new ones (see adaptive.buildSession).
   const open = useMemo(() => openVerbs(s, CATEGORIES), []) // snapshot at session start
   const kinds: Kind[] = game === 'mixed'
-    ? (['picture', 'listen', 'conjugate', 'complete', 'timetravel', 'translate', 'build', 'pronounce'] as Kind[]).filter((k) => canSpeak(target) || !NEEDS_VOICE.includes(k))
+    ? playable(['picture', 'listen', 'conjugate', 'complete', 'timetravel', 'translate', 'build', 'pronounce'], target, native).filter((k) => canSpeak(target) || !NEEDS_VOICE.includes(k))
     : [game as Kind]
 
   /** Next question for a verb: game picked for the learner, difficulty from that game's history, tenses from the unlock path. */

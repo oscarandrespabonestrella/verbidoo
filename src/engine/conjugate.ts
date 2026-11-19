@@ -1,9 +1,11 @@
-import { PERSONS, langOf, type Lang, type Usage, type Variant } from '../data/i18n'
+import { PERSONS, langOf, type Lang, type UiLang, type Usage, type Variant } from '../data/i18n'
 import type { EnLemma, RomLemma, Verb } from '../data/verbs'
 import { formText, join, mk, six, vowelStart, withAux, type Form, type Kind, type Tense, type TenseTable, type Time } from './core'
 import { TARGETS } from '../data/targets'
 import { conjugateDutch, dutchNonFinite } from './dutch'
 import { conjugateFrench, frenchNonFinite } from './french'
+import { conjugateItalian } from './italian'
+import { NOTES_EXTRA } from '../data/notes-extra'
 
 export { formText, type Form, type Kind, type Tense, type TenseTable, type Time }
 
@@ -173,6 +175,7 @@ export function conjugate(v: Verb, variant: Variant, pron = false): TenseTable[]
   }
   if (lang === 'fr') return conjugateFrench(v.fr, pron && !!v.fr.pronominal)
   if (lang === 'nl') return conjugateDutch(v.nl, pron && !!v.nl.refl)
+  if (lang === 'it') return conjugateItalian(v.it)
   const l = lemmaFor(v, lang, variant)
   return (lang === 'es' ? ES : PT).map(([id, label, time, level, build]) => ({
     tense: { id, label, time, level, usage: USAGE[`${lang}.${id}`] },
@@ -180,10 +183,10 @@ export function conjugate(v: Verb, variant: Variant, pron = false): TenseTable[]
   }))
 }
 
-/** The lemma for a variant: French and Dutch have one per verb; Spanish/Portuguese may have regional overrides. */
+/** The lemma for a variant: French, Dutch and Italian have one per verb; Spanish/Portuguese may have regional overrides. */
 const lemma = (v: Verb, variant: Variant) => {
   const lang = langOf(variant)
-  return lang === 'en' ? v.en : lang === 'fr' || lang === 'nl' ? v[lang] : lemmaFor(v, lang, variant)
+  return lang === 'en' ? v.en : lang === 'fr' || lang === 'nl' || lang === 'it' ? v[lang] : lemmaFor(v, lang, variant)
 }
 /** Dictionary form: "manger", "houden van". */
 export const infinitive = (v: Verb, variant: Variant) => {
@@ -194,7 +197,11 @@ export const syllables = (v: Verb, variant: Variant) => {
   const l = lemma(v, variant)
   return 'syl' in l ? l.syl.split('-') : [l.inf]
 }
-export const noteFor = (v: Verb, variant: Variant) => lemma(v, variant).note
+/** Note on the verb in every language it exists in (English, Spanish, Portuguese from the lemma; French, Italian from NOTES_EXTRA). */
+export const noteFor = (v: Verb, variant: Variant): Partial<Record<UiLang, string>> | undefined => {
+  const l = lemma(v, variant), n = 'note' in l ? l.note : undefined
+  return n && { ...n, ...NOTES_EXTRA[n.en] }
+}
 /** Broad IPA of the infinitive, when the content has it (French, Dutch). */
 export const ipaOf = (v: Verb, variant: Variant) => { const l = lemma(v, variant); return 'ipa' in l ? l.ipa : undefined }
 /** Whether the verb has a pronominal / reflexive use the conjugation table can switch to. */
@@ -222,7 +229,11 @@ export function verbKind(v: Verb, variant: Variant): Kind {
 }
 
 /** Tenses that mean roughly the same thing across languages, for side-by-side comparison. */
-const OWN = { now: { en: 'present_simple', es: 'pres', pt: 'pres' }, past: { en: 'past_simple', es: 'pret', pt: 'pret' }, future: { en: 'future_simple', es: 'fut', pt: 'fut' } }
+const OWN = {
+  now: { en: 'present_simple', es: 'pres', pt: 'pres', it: 'pres' },
+  past: { en: 'past_simple', es: 'pret', pt: 'pret', it: 'pc' },
+  future: { en: 'future_simple', es: 'fut', pt: 'fut', it: 'fut' },
+}
 export const COMPARABLE = Object.fromEntries((['now', 'past', 'future'] as const).map((k) => [k, {
   ...OWN[k], ...Object.fromEntries(Object.values(TARGETS).map((c) => [c.lang, c.compare[k]])),
 }])) as Record<'now' | 'past' | 'future', Record<Lang, string>>
@@ -231,7 +242,7 @@ export const COMPARABLE = Object.fromEntries((['now', 'past', 'future'] as const
 export function sentenceFor(v: Verb, i: number, variant: Variant): string {
   const s = v.ex[i]
   return ({
-    en: s[0], es: s[1], pt: variant === 'pt-PT' ? s[3] ?? s[2] : s[2],
+    en: s[0], es: s[1], pt: variant === 'pt-PT' ? s[3] ?? s[2] : s[2], it: v.it.ex[i],
     fr: variant === 'fr-CA' ? v.fr.exCA?.[i] ?? v.fr.ex[i] : v.fr.ex[i],
     nl: variant === 'nl-BE' ? v.nl.exBE?.[i] ?? v.nl.ex[i] : v.nl.ex[i],
   })[langOf(variant)]

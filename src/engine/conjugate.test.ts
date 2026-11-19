@@ -1,7 +1,8 @@
 import { expect, test } from 'vitest'
 import type { Variant } from '../data/i18n'
 import { verbById, VERBS } from '../data/verbs'
-import { conjugate, formText, infinitive, nonFiniteForms, say, verbKind } from './conjugate'
+import { NOTES_EXTRA } from '../data/notes-extra'
+import { conjugate, formText, infinitive, nonFiniteForms, noteFor, say, sentenceFor, verbKind } from './conjugate'
 import { frenchNonFinite, frenchStems, silentTail, stemFamily } from './french'
 
 const table = (id: string, variant: Variant, tense: string, pron = false) => conjugate(verbById(id)!, variant, pron).find((t) => t.tense.id === tense)!
@@ -247,4 +248,65 @@ test('Dutch content is well-formed', () => {
   }
   // Games tell verbs apart by the infinitive, so it must be unique.
   expect(new Set(VERBS.map((v) => v.nl.inf)).size).toBe(VERBS.length)
+})
+
+// Italian (base language): reference forms from standard grammars / Wiktionary.
+test.each([
+  ['eat', 'it-IT', 'pres', 'mangio mangi mangia mangiamo mangiate mangiano'],
+  ['play', 'it-IT', 'pres', 'gioco giochi gioca giochiamo giocate giocano'],
+  ['understand', 'it-IT', 'pres', 'capisco capisci capisce capiamo capite capiscono'],
+  ['go', 'it-IT', 'pres', 'vado vai va andiamo andate vanno'],
+  ['be', 'it-IT', 'imperf', 'ero eri era eravamo eravate erano'],
+  ['make', 'it-IT', 'imperf', 'facevo facevi faceva facevamo facevate facevano'],
+  ['talk', 'it-IT', 'imperf', 'parlavo parlavi parlava parlavamo parlavate parlavano'],
+  ['eat', 'it-IT', 'pc', 'ho mangiato hai mangiato ha mangiato abbiamo mangiato avete mangiato hanno mangiato'],
+  ['go', 'it-IT', 'pc', 'sono andato sei andato è andato siamo andati siete andati sono andati'],
+  ['write', 'it-IT', 'pc', 'ho scritto hai scritto ha scritto abbiamo scritto avete scritto hanno scritto'],
+  ['eat', 'it-IT', 'fut', 'mangerò mangerai mangerà mangeremo mangerete mangeranno'],
+  ['search', 'it-IT', 'fut', 'cercherò cercherai cercherà cercheremo cercherete cercheranno'],
+  ['study', 'it-IT', 'fut', 'studierò studierai studierà studieremo studierete studieranno'],
+  ['have', 'it-IT', 'fut', 'avrò avrai avrà avremo avrete avranno'],
+  ['come', 'it-IT', 'fut', 'verrò verrai verrà verremo verrete verranno'],
+  ['can', 'it-IT', 'cond', 'potrei potresti potrebbe potremmo potreste potrebbero'],
+  ['read', 'it-IT', 'prog', 'sto leggendo stai leggendo sta leggendo stiamo leggendo state leggendo stanno leggendo'],
+  ['drink', 'it-IT', 'prog', 'sto bevendo stai bevendo sta bevendo stiamo bevendo state bevendo stanno bevendo'],
+  ['leave', 'it-IT', 'trap', 'ero partito eri partito era partito eravamo partiti eravate partiti erano partiti'],
+  ['see', 'it-IT', 'trap', 'avevo visto avevi visto aveva visto avevamo visto avevate visto avevano visto'],
+] as [string, Variant, string, string][])('%s %s %s', (id, variant, tense, expected) => {
+  expect(row(id, variant, tense)).toBe(expected)
+})
+
+test('Italian kinds and spelling rules', () => {
+  expect(verbKind(verbById('cook')!, 'it-IT')).toBe('regular')
+  expect(verbKind(verbById('play')!, 'it-IT')).toBe('spelling')
+  expect(verbKind(verbById('go')!, 'it-IT')).toBe('irregular')
+})
+
+test('Italian: every verb has a lemma, a meaning and sentences whose {form} is a real conjugated form', () => {
+  for (const v of VERBS) {
+    expect(v.it, v.id).toBeDefined()
+    expect(v.mean.it, v.id).toBeTruthy()
+    expect(v.mean.fr, v.id).toBeTruthy()
+    const forms = new Set(conjugate(v, 'it-IT').flatMap((t) => t.forms.map((f) => formText(f!))))
+    for (const s of v.it.ex) {
+      const braced = s.match(/\{([^}]+)\}/)
+      expect(braced, `${v.id}: ${s}`).not.toBeNull()
+      expect(forms, `${v.id}: ${braced![1]}`).toContain(braced![1])
+    }
+  }
+})
+
+test('French and Italian notes exist for every French / Dutch note', () => {
+  for (const v of VERBS) for (const l of [v.fr, v.nl]) {
+    if (!l.note) continue
+    expect(NOTES_EXTRA[l.note.en], `${v.id}: ${l.note.en}`).toBeDefined()
+    expect(NOTES_EXTRA[l.note.en].fr).toBeTruthy()
+    expect(NOTES_EXTRA[l.note.en].it).toBeTruthy()
+  }
+})
+
+test('French as a base language reuses the French engine and sentences', () => {
+  expect(row('eat', 'fr-FR', 'pc')).toBe('ai mangé as mangé a mangé avons mangé avez mangé ont mangé')
+  expect(sentenceFor(verbById('eat')!, 0, 'fr-FR')).toBe('Je {mange} une pomme tous les jours.')
+  expect(noteFor(verbById('eat')!, 'fr-FR')?.it).toBeTruthy()
 })

@@ -1,4 +1,4 @@
-import type { UiLang } from './i18n'
+import type { Text3 } from './i18n'
 
 /**
  * French lemma. Regular -er verbs need only `inf`/`syl`; the engine builds the rest.
@@ -29,7 +29,7 @@ export interface FrLemma {
   ps?: string; subj?: string; imper?: string; ppres?: string; pronominal?: true
   stems?: Stems
 
-  note?: Record<UiLang, string>
+  note?: Text3
   ex: [string, string]; exCA?: [string?, string?]
 }
 
