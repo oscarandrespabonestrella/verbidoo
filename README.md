@@ -5,7 +5,7 @@
 # Verbidoo
 
 **Master French and Dutch verbs, a few minutes a day.**
-Short, playful conjugation games for children, with Gaston 🇫🇷 and Ollie 🇳🇱.
+Short, playful conjugation games for users, with Gaston 🇫🇷 and Ollie 🇳🇱.
 
 [**▶ Try it at verbidoo.quest**](https://verbidoo.quest) · [Contribute](CONTRIBUTING.md) · [Report a wrong form](../../issues/new?template=content_correction.yml)
 
@@ -21,7 +21,7 @@ Short, playful conjugation games for children, with Gaston 🇫🇷 and Ollie �
 
 ## What it is
 
-Verbidoo is a free, ad-free web app (installable as a PWA, works offline) that helps children practise verb conjugation in a language they're learning, explained in a language they already speak.
+Verbidoo is a free, ad-free web app (installable as a PWA, works offline) that helps users practise verb conjugation in a language they're learning, explained in a language they already speak.
 
 | Learn | Variants | Explained in |
 |---|---|---|
@@ -43,17 +43,15 @@ Verbidoo is a free, ad-free web app (installable as a PWA, works offline) that h
 - **Adaptive practice**: spaced repetition (Leitner boxes) brings back the verbs and tenses a child finds tricky.
 - **Real voices**: every French and Dutch phrase is pre-recorded, with a regional accent per variant, and plays offline.
 - **Missions, XP, badges and characters** to keep it fun, plus a gentle "break time" reminder.
-- **Several children per device**, each with their own profile, languages and progress.
+- **Several users per device**, each with their own profile, languages and progress.
 - **Parent area** behind a grown-up check: progress reports, rules, voice choice and optional cloud sync between devices.
 
 ## Privacy first
 
-Verbidoo is built for children, so:
-
 - **No account is needed.** Progress lives on the device (localStorage).
 - **No ads, trackers, analytics, chat or uploads.**
-- Cloud backup is **optional** and opened by a parent. Only a nickname, an avatar and learning progress are ever synced: never real names, emails of children or voice recordings.
-- Automatic voice checking in the Pronounce game is **off by default**. It uses the browser's own speech recognition, which may send audio to the browser maker, so only a parent can turn it on. Children can always just listen and repeat instead.
+- Cloud backup is **optional** and opened by a parent. Only a nickname, an avatar and learning progress are ever synced: never real names, emails of users or voice recordings.
+- Automatic voice checking in the Pronounce game is **off by default**. It uses the browser's own speech recognition, which may send audio to the browser maker, so only a parent can turn it on. Users can always just listen and repeat instead.
 
 ## Run it locally
 
@@ -94,7 +92,7 @@ Contributions are very welcome, and you don't need to be a developer:
 - 🗣️ **Native speakers**: irregular forms, sentences and translations haven't been reviewed by native speakers yet. Spotting one mistake already helps. [Report a correction](../../issues/new?template=content_correction.yml).
 - 💻 **Developers**: new games, accessibility, performance, a new language.
 - 🎨 **Illustrators**: mascot moods, scenes, icons.
-- 👩‍🏫 **Teachers and parents**: [share ideas](../../issues/new?template=feature_request.yml) about what helps children learn.
+- 👩‍🏫 **Teachers and parents**: [share ideas](../../issues/new?template=feature_request.yml) about what helps users learn.
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) to get started, and please follow the [Code of Conduct](CODE_OF_CONDUCT.md). Found a security or privacy issue? See [SECURITY.md](SECURITY.md).
 
