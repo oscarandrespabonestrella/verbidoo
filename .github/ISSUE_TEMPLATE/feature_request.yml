@@ -1,0 +1,22 @@
+name: 💡 Idea
+description: Suggest a game, a language, a verb or an improvement
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: What would you like, and how would it help a child learn?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Who is it for?
+      placeholder: e.g. 7-year-old learning Dutch, a classroom, a parent at home
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Contribution
+      options:
+        - label: I'd like to help build this

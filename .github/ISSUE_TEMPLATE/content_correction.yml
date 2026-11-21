@@ -1,0 +1,52 @@
+name: 📝 Content correction
+description: A wrong conjugation, sentence, translation, pronunciation or recording
+labels: [content]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Native-speaker reviews are the most valuable help this project can get. Thank you!
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language and variant
+      options:
+        - French (France, fr-FR)
+        - French (Canada, fr-CA)
+        - Dutch (Netherlands, nl-NL)
+        - Dutch (Belgium, nl-BE)
+        - English
+        - Spanish
+        - Portuguese
+        - Italian
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is wrong?
+      options:
+        - Conjugated form
+        - Example sentence
+        - Translation or meaning
+        - Pronunciation / recording
+        - Interface text
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: verb
+    attributes:
+      label: Verb, tense and person
+      placeholder: e.g. "aller", passé composé, nous
+  - type: textarea
+    id: correction
+    attributes:
+      label: What the app shows, and what it should be
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source (optional)
+      description: Wiktionary, Bescherelle, Van Dale, Larousse, a grammar book, or "native speaker"
